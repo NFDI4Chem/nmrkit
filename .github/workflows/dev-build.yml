@@ -22,7 +22,7 @@ env:
 jobs:
   setup-build-publish-dev:
     name: Build & publish to dev registry
-    if: github.ref == 'refs/heads/development'
+    #if: github.ref == 'refs/heads/development'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
