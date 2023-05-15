@@ -25,7 +25,9 @@ RUN export JAVA_HOME
 WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 
-RUN pip3 install --upgrade setuptools pip
+RUN pip3 install --upgrade setuptools pip && \
+    apt-get update && apt-get install -y git
+
 RUN pip3 install --no-cache-dir -r /code/requirements.txt
 
 RUN python3 -m pip uninstall -y uvicorn
