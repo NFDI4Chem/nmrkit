@@ -16,7 +16,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_ZONE: europe-west3-a
-  REPOSITORY_NAME: nmr-predict-dev
+  REPOSITORY_NAME: nmrxiv-dev
   APP_IMAGE: nmr-predict-dev
 
 jobs:
