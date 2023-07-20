@@ -32,6 +32,61 @@ services:
       - 3000:3000
     volumes:
       - grafana_data:/var/lib/grafana
+  redis:
+    image: "redis:alpine"
+    ports:
+        - "${FORWARD_REDIS_PORT:-6379}:6379"
+    volumes:
+        - "redis:/data"
+    networks:
+        - default
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        retries: 3
+        timeout: 5s
+  pgsql:
+    image: "informaticsmatters/rdkit-cartridge-debian"
+    ports:
+        - "${FORWARD_DB_PORT:-5432}:5432"
+    environment:
+        PG_VERSION: "${DB_VERSION}"
+        POSTGRES_DB: "${DB_DATABASE}"
+        POSTGRES_USER: "${DB_USERNAME}"
+        POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+    volumes:
+        - "pgsql:/var/lib/postgresql/data"
+    networks:
+        - default
+    healthcheck:
+        test:
+            [
+                "CMD",
+                "pg_isready",
+                "-q",
+                "-d",
+                "${DB_DATABASE}",
+                "-U",
+                "${DB_USERNAME}",
+            ]
+        retries: 3
+        timeout: 5s
+  minio:
+    image: 'minio/minio:latest'
+    ports:
+        - '${FORWARD_MINIO_PORT:-9001}:9001'
+        - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+    environment:
+        MINIO_ROOT_USER: 'sail'
+        MINIO_ROOT_PASSWORD: 'password'
+    volumes:
+        - 'minio:/data/minio'
+    networks:
+        - default
+    command: minio server /data/minio --console-address ":8900"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+        retries: 3
+        timeout: 5s
 volumes:
   prometheus_data:
     driver: local
@@ -45,6 +100,12 @@ volumes:
       o: bind
       type: none
       device: ./grafana_data
+  redis:
+    driver: local
+  minio:
+    driver: local
+  pgsql:
+    driver: local
 networks:
   default: 
     name: nmr_predict_fastapi
