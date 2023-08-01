@@ -12,7 +12,8 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     apt-get update -y && \
     apt-get install -y openjdk-11-jre && \
-    apt-get install -y curl
+    apt-get install -y curl && \
+    conda update -n base -c defaults conda
 
 RUN conda install -c conda-forge python>=PYTHON_VERSION
 RUN conda install -c conda-forge rdkit>=RDKIT_VERSION
