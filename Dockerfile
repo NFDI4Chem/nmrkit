@@ -24,8 +24,13 @@ RUN python3 -m pip install -U pip
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 RUN export JAVA_HOME
 
+RUN git clone "https://github.com/rinikerlab/lightweight-registration.git" lwreg
+RUN chmod +x lwreg
+RUN pip3 install --editable ./lwreg/.
+
 WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
+COPY ./alembic.ini /code/alembic.ini
 
 RUN pip3 install --upgrade setuptools pip
 RUN pip3 install --no-cache-dir -r /code/requirements.txt

@@ -83,7 +83,8 @@ async def getCDKHOSECodes(smiles: str, noOfSpheres: int, ringsize: bool):
     HOSECodes = []
     atoms = molecule.atoms()
     for atom in atoms:
-        moleculeHOSECode = HOSECodeGenerator.getHOSECode(molecule, atom, noOfSpheres, ringsize)
+        moleculeHOSECode = HOSECodeGenerator.getHOSECode(
+            molecule, atom, noOfSpheres, ringsize
+        )
         HOSECodes.append(str(moleculeHOSECode))
     return HOSECodes
-

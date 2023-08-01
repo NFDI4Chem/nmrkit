@@ -16,6 +16,8 @@ services:
       timeout: 10s
       retries: 20
       start_period: 60s
+    env_file:
+      - ./.env
   prometheus:
     image: prom/prometheus
     container_name: nmr_predict_prometheus
@@ -47,29 +49,26 @@ services:
   pgsql:
     image: "informaticsmatters/rdkit-cartridge-debian"
     ports:
-        - "${FORWARD_DB_PORT:-5432}:5432"
-    environment:
-        PG_VERSION: "${DB_VERSION}"
-        POSTGRES_DB: "${DB_DATABASE}"
-        POSTGRES_USER: "${DB_USERNAME}"
-        POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+      - "${FORWARD_DB_PORT:-5432}:5432"
+    env_file:
+      - ./.env
     volumes:
-        - "pgsql:/var/lib/postgresql/data"
+      - "pgsql:/var/lib/postgresql/data"
     networks:
-        - default
+      - default
     healthcheck:
-        test:
-            [
-                "CMD",
-                "pg_isready",
-                "-q",
-                "-d",
-                "${DB_DATABASE}",
-                "-U",
-                "${DB_USERNAME}",
-            ]
-        retries: 3
-        timeout: 5s
+      test:
+        [
+            "CMD",
+            "pg_isready",
+            "-q",
+            "-d",
+            "${POSTGRES_DB}",
+            "-U",
+            "${POSTGRES_USER}",
+        ]
+      retries: 3
+      timeout: 5s
   minio:
     image: 'minio/minio:latest'
     ports:
