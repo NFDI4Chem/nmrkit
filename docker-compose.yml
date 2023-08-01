@@ -1,0 +1,110 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: nmr-predict
+    volumes:
+      - ./app:/code/app
+    ports:
+      - "80:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/latest/ping"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+    env_file:
+      - ./.env
+  prometheus:
+    image: prom/prometheus
+    container_name: nmr_predict_prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+  grafana:
+    image: grafana/grafana
+    container_name: nmr_predict_grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+  redis:
+    image: "redis:alpine"
+    ports:
+        - "${FORWARD_REDIS_PORT:-6379}:6379"
+    volumes:
+        - "redis:/data"
+    networks:
+        - default
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        retries: 3
+        timeout: 5s
+  pgsql:
+    image: "informaticsmatters/rdkit-cartridge-debian"
+    ports:
+      - "${FORWARD_DB_PORT:-5432}:5432"
+    env_file:
+      - ./.env
+    volumes:
+      - "pgsql:/var/lib/postgresql/data"
+    networks:
+      - default
+    healthcheck:
+      test:
+        [
+            "CMD",
+            "pg_isready",
+            "-q",
+            "-d",
+            "${POSTGRES_DB}",
+            "-U",
+            "${POSTGRES_USER}",
+        ]
+      retries: 3
+      timeout: 5s
+  minio:
+    image: 'minio/minio:latest'
+    ports:
+        - '${FORWARD_MINIO_PORT:-9001}:9001'
+        - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+    environment:
+        MINIO_ROOT_USER: 'sail'
+        MINIO_ROOT_PASSWORD: 'password'
+    volumes:
+        - 'minio:/data/minio'
+    networks:
+        - default
+    command: minio server /data/minio --console-address ":8900"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+        retries: 3
+        timeout: 5s
+volumes:
+  prometheus_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./prometheus_data
+  grafana_data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./grafana_data
+  redis:
+    driver: local
+  minio:
+    driver: local
+  pgsql:
+    driver: local
+networks:
+  default: 
+    name: nmr_predict_fastapi

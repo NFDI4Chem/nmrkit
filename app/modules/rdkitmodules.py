@@ -1,6 +1,7 @@
 from hosegen import HoseGenerator
 from rdkit import Chem
 
+
 async def getRDKitHOSECodes(smiles: str, noOfSpheres: int):
     if any(char.isspace() for char in smiles):
         smiles = smiles.replace(" ", "+")

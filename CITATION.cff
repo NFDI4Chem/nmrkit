@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Venkata"
+  given-names: "Chandrasekhar"
+  orcid: "https://orcid.org/0000-0002-2564-3243"
+- family-names: "Sharma"
+  given-names: "Nisha"
+  orcid: "https://orcid.org/0009-0006-4755-1039"
+- family-names: "Kuhn"
+  given-names: "Stefan"
+  orcid: "https://orcid.org/0000-0002-5990-4157"
+title: "NMR predict microservice"
+version: V1.0.0
+doi: 10.5281/zenodo.8112749
+date-released: 2023-07-20
+url: "https://github.com/nfdi4chem/nmr-predict"
