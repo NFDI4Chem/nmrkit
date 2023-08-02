@@ -136,3 +136,6 @@ docs/_build/
 
 #grafana
 grafana_data/
+
+.vitepress/dist
+.vitepress/cache
