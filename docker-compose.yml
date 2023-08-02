@@ -5,7 +5,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: nmr-kit
+    container_name: nmrkit-api
     volumes:
       - ./app:/code/app
     ports:
@@ -107,4 +107,4 @@ volumes:
     driver: local
 networks:
   default: 
-    name: nmr_predict_fastapi
+    name: nmrkit_vpc
