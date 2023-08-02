@@ -1,7 +1,7 @@
 """create_main_tables
 
 Revision ID: 200a761f2f51
-Revises: 
+Revises:
 Create Date: 2023-07-21 09:13:50.233260
 
 """

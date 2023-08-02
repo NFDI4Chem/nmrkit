@@ -3,7 +3,7 @@
 
 # Local development instructions
 
-1. Clone the project from [GitHub](https://github.com/NFDI4Chem/nmr-predict)
+1. Clone the project from [GitHub](https://github.com/NFDI4Chem/nmrkit)
 
 3. Open a terminal or command prompt.
 

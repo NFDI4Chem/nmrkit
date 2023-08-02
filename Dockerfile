@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3 AS nmr-predict-ms
+FROM continuumio/miniconda3 AS nmrkit-ms
 
 ENV PYTHON_VERSION=3.10
 ENV RDKIT_VERSION=2023.03.1

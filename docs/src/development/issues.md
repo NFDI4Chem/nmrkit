@@ -3,7 +3,7 @@
 
 ## Feature Request
 
-Thank you for your interest in improving our product! Please use the template below to submit your feature request either by email or on our [Github](https://github.com/NFDI4Chem/nmr-predict/issues). We appreciate your feedback and suggestions.
+Thank you for your interest in improving our product! Please use the template below to submit your feature request either by email or on our [Github](https://github.com/NFDI4Chem/nmrkit/issues). We appreciate your feedback and suggestions.
 
 **Feature Request Template:**
 
@@ -23,7 +23,7 @@ Add any other context or screenshots about the feature request here.
 
 ## Report Issues/Bugs
 
-We appreciate your help in improving our product. If you have encountered any issues or bugs, please use the template below to report them either by email or on our [Github](https://github.com/NFDI4Chem/nmr-predict/issues). Your feedback is valuable to us in ensuring a smooth user experience.
+We appreciate your help in improving our product. If you have encountered any issues or bugs, please use the template below to report them either by email or on our [Github](https://github.com/NFDI4Chem/nmrkit/issues). Your feedback is valuable to us in ensuring a smooth user experience.
 
 **Issue Template:**
 
