@@ -10,49 +10,6 @@ export default defineConfigWithTheme<ThemeConfig>({
     cleanUrls: false,
     srcDir: 'src',
 
-    head: [
-        ['link', {
-            rel: 'apple-touch-icon',
-            sizes: '180x180',
-            href: 'https://envoyer.io/apple-touch-icon.png',
-        }],
-        ['link', {
-            rel: 'icon',
-            sizes: '16x16',
-            type: 'image/png',
-            href: 'https://envoyer.io/favicon-16x16.png',
-        }],
-        ['link', {
-            rel: 'icon',
-            sizes: '32x32',
-            type: 'image/png',
-            href: 'https://envoyer.io/favicon-32x32.png',
-        }],
-        ['link', {
-            rel: 'mask-icon',
-            href: 'https://envoyer.io/safari-pinned-tab.svg',
-        }],
-        ['meta', {
-            name: 'msapplication-TileColor',
-            content: '#18b69b',
-        }],
-        ['meta', {
-            name: 'msapplication-TileImage',
-            content: 'envoyer.io/mstile-144x144.png',
-        }],
-        ['meta', {
-            property: 'og:image',
-            content: 'https://envoyer.io/social-share.png',
-        }],
-        ['meta', {
-            property: 'twitter:card',
-            content: 'summary_large_image',
-        }],
-        ['meta', {
-            property: 'twitter:image',
-            content: 'https://envoyer.io/social-share.png',
-        }],
-    ],
 
     themeConfig: {
         logo: {
@@ -65,36 +22,42 @@ export default defineConfigWithTheme<ThemeConfig>({
         ],
         sidebar: [
             {
-                text: "Getting Started",
-                items: [
-                    { text: 'Introduction', link: '/introduction' },
-                ],
+              text: 'Getting Started',
+              items: [
+                { text: 'Introduction', link: '/introduction' },
+                { text: 'Versions', link: '/getting-started/versions' },
+                { text: 'Architecture', link: '/getting-started/architecture' },
+              ]
             },
             {
-                text: "Accounts",
-                items: [
-                    { text: 'Your Account', link: '/accounts/your-account' },
-                    { text: 'Source Control', link: '/accounts/source-control' },
-                ],
+              text: 'Deployment',
+              items: [
+                //{ text: 'Public API', link: '/public-api' },
+                { text: 'Docker', link: '/deployment/docker' },
+                { text: 'Cluster Deployment (K8S)', link: '/deployment/cluster-deployment' }
+              ]
             },
             {
-                text: "Projects",
-                items: [
-                    { text: 'Management', link: '/projects/management' },
-                    { text: 'Servers', link: '/projects/servers' },
-                    { text: 'Deployment Hooks', link: '/projects/deployment-hooks' },
-                    { text: 'Heartbeats', link: '/projects/heartbeats' },
-                    { text: 'Notifications', link: '/projects/notifications' },
-                    { text: 'Collaborators', link: '/projects/collaborators' },
-                ],
+              text: 'Modules',
+              items: [
+                { text: 'Registration', link: '/modules/registration' },
+                { text: 'Search', link: '/modules/search' },
+                { text: 'Prediction', link: '/modules/prediction' },
+                { text: 'Spectra', link: '/modules/spectra' },
+                { text: 'Training', link: '/modules/training' },
+                { text: 'Validation', link: 'modules/validation' },
+              ]
             },
-        ],
-        search: {
-            provider: 'local',
-            options: {
-                placeholder: 'Search Envoyer Docs...',
-            },
-        }
+            {
+              text: 'Development',
+              items: [
+                { text: 'Local Installation', link: '/development/installation' },
+                { text: 'License', link: '/development/license' },
+                { text: 'Issues/Feature requests', link: '/development/issues' },
+                { text: 'Contributors', link: '/development/contributors' }
+              ]
+            }
+          ],
     },
     vite: {
         server: {
