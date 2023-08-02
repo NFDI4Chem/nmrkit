@@ -5,7 +5,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: nmr-predict
+    container_name: nmr-kit
     volumes:
       - ./app:/code/app
     ports:

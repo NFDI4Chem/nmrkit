@@ -12,7 +12,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 app = FastAPI(
     title=config.PROJECT_NAME,
     description="Python based microservice to store and predict spectra.",
-    terms_of_service="https://nfdi4chem.github.io/nmr-predict",
+    terms_of_service="https://nfdi4chem.github.io/nmrkit",
     contact={
         "name": "Steinbeck Lab",
         "url": "https://cheminf.uni-jena.de/",
@@ -44,7 +44,7 @@ app = VersionedFastAPI(
     version_format="{major}",
     prefix_format="/v{major}",
     enable_latest=True,
-    terms_of_service="https://nfdi4chem.github.io/nmr-predict",
+    terms_of_service="https://nfdi4chem.github.io/nmrkit",
     contact={
         "name": "Steinbeck Lab",
         "url": "https://cheminf.uni-jena.de/",
@@ -61,4 +61,4 @@ Instrumentator().instrument(app).expose(app)
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="https://nfdi4chem.github.io/nmr-predict")
+    return RedirectResponse(url="https://nfdi4chem.github.io/nmrkit")
