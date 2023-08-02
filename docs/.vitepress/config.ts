@@ -10,11 +10,10 @@ export default defineConfigWithTheme<ThemeConfig>({
     cleanUrls: false,
     srcDir: 'src',
 
-
     themeConfig: {
         logo: {
-            light: '/logo.svg',
-            dark: '/logo-dark.svg',
+            light: '/logo.png',
+            dark: '/logo-dark.png',
         },
         nav: [
             { text: 'Home', link: '/introduction' },
