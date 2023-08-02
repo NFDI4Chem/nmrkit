@@ -4,13 +4,13 @@ from fastapi_versioning import VersionedFastAPI
 
 from .routers import chem
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi
-import os
+
+from app.core import config, tasks
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(
-    title="NMR Predict Microservice",
+    title=config.PROJECT_NAME,
     description="Python based microservice to store and predict spectra.",
     terms_of_service="https://nfdi4chem.github.io/nmr-predict",
     contact={
@@ -36,6 +36,9 @@ app.add_middleware(
 
 app.include_router(chem.router)
 
+app.add_event_handler("startup", tasks.create_start_app_handler(app))
+app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
+
 app = VersionedFastAPI(
     app,
     version_format="{major}",
@@ -58,6 +61,4 @@ Instrumentator().instrument(app).expose(app)
 
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(
-        url="https://nfdi4chem.github.io/nmr-predict"
-    )
+    return RedirectResponse(url="https://nfdi4chem.github.io/nmr-predict")

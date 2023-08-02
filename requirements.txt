@@ -1,8 +1,13 @@
 fastapi
 uvicorn
+pydantic
 rdkit-pypi>=2022.09.4
 HOSE_code_generator @ git+https://github.com/Ratsemaat/HOSE_code_generator
 jpype1==1.4.1
 pystow>=0.4.9
 fastapi-versioning>=0.10.0
 prometheus-fastapi-instrumentator
+databases[postgresql]==0.4.2
+SQLAlchemy==2.0.19
+alembic==1.11.1
+psycopg2-binary
