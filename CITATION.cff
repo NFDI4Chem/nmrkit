@@ -10,8 +10,8 @@ authors:
 - family-names: "Kuhn"
   given-names: "Stefan"
   orcid: "https://orcid.org/0000-0002-5990-4157"
-title: "NMR predict microservice"
+title: "NMR Kit"
 version: V1.0.0
 doi: 10.5281/zenodo.8112749
 date-released: 2023-07-20
-url: "https://github.com/nfdi4chem/nmr-predict"
+url: "https://github.com/nfdi4chem/nmr-kit"
