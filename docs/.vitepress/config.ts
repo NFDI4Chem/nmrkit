@@ -17,8 +17,8 @@ export default defineConfigWithTheme<ThemeConfig>({
             dark: '/logo-dark.svg',
         },
         nav: [
-            { text: 'Envoyer', link: 'https://envoyer.io' },
-            { text: 'Video Tutorials', link: 'https://laracasts.com/series/envoyer' },
+            { text: 'Home', link: '/introduction' },
+            { text: 'API', link: '' },
         ],
         sidebar: [
             {
