@@ -135,4 +135,4 @@ node_modules
 docs/_build/
 
 #grafana
-grafana_data/
+grafana_data/*
