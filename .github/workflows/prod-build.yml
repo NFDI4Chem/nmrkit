@@ -16,7 +16,7 @@ on:
 env:
   DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
   DOCKER_HUB_PASSWORD : ${{ secrets.DOCKER_PASSWORD  }}
-  REPOSITORY_NAME: cheminformatics-python-microservice
+  REPOSITORY_NAME: nmrkit
   REPOSITORY_NAMESPACE: caffeinejena
 
 jobs:
