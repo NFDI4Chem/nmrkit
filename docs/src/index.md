@@ -1,1 +1,1 @@
-<meta http-equiv="refresh" content="0;url=/introduction.html" />
+<meta http-equiv="refresh" content="0;url=/nmrkit/introduction.html" />
