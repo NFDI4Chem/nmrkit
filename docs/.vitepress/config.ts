@@ -6,7 +6,7 @@ export default defineConfigWithTheme<ThemeConfig>({
     extends: config,
     title: 'Envoyer',
     description: 'Zero Downtime PHP Deployments',
-    base: '/',
+    base: '/nmrkit/',
     cleanUrls: false,
     srcDir: 'src',
 
