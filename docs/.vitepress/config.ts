@@ -4,8 +4,8 @@ import config from '@hempworks/pilgrim/config'
 
 export default defineConfigWithTheme<ThemeConfig>({
     extends: config,
-    title: 'Envoyer',
-    description: 'Zero Downtime PHP Deployments',
+    title: 'NMRKit',
+    description: 'A collection of powerful microservices designed to simplify your NMR data processing and analysis',
     base: '/nmrkit/',
     cleanUrls: false,
     srcDir: 'src',
