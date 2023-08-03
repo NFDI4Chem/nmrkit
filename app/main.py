@@ -3,6 +3,7 @@ from fastapi import FastAPI, status
 from fastapi.responses import RedirectResponse
 from fastapi_versioning import VersionedFastAPI
 
+from .routers import registration
 from .routers import chem
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,6 +27,7 @@ app = FastAPI(
     },
 )
 
+app.include_router(registration.router)
 app.include_router(chem.router)
 
 app.add_event_handler("startup", tasks.create_start_app_handler(app))
