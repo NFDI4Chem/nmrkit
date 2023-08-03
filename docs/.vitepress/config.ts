@@ -9,15 +9,15 @@ export default defineConfigWithTheme<ThemeConfig>({
     base: '/nmrkit/',
     cleanUrls: false,
     srcDir: 'src',
-
     themeConfig: {
         logo: {
             light: '/logo.svg',
             dark: '/logo-dark.svg',
         },
         nav: [
-            { text: 'Home', link: '/introduction' },
-            { text: 'API', link: '' },
+            { text: 'Home', link: '/nmrkit/introduction' },
+            { text: 'API', link: 'https://api.nmrxiv.org/latest/docs' },
+            { text: 'GitHub', link: 'https://github.com/NFDI4Chem/nmrkit' }
         ],
         sidebar: [
             {
