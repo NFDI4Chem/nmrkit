@@ -1,0 +1,20 @@
+{
+  "name": "test-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "nmr-cli": "./bin/index.js"
+  },
+  "dependencies": {
+    "filelist-utils": "^1.10.0",
+    "nmr-load-save": "^0.15.2",
+    "yargs": "^17.7.2"
+  }
+}
