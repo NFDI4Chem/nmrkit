@@ -38,7 +38,7 @@ def get_health() -> HealthCheck:
 
 @router.get(
     "/hosecode",
-    tags=["registration"],
+    tags=["chem"],
     summary="Generates HOSE codes of molecule",
     response_model=list[str],
     response_description="Returns an array of hose codes generated",

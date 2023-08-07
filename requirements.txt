@@ -11,3 +11,4 @@ databases[postgresql]==0.4.2
 SQLAlchemy==2.0.19
 alembic==1.11.1
 psycopg2-binary
+python-multipart
