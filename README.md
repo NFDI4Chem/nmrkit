@@ -1,4 +1,4 @@
-<p align="center"><a href="#" target="_blank"><img src="/public/img/logo.svg" width="400" alt="NMRKit Logo"></a></p>
+<p align="center"><a href="#" target="_blank"><img src="/public/img/logo.svg" width="400" alt="NMRKit Logo"></a></p> 
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://opensource.org/licenses/MIT)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://github.com/NFDI4Chem/nmrkit/graphs/commit-activity)
