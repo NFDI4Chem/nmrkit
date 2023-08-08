@@ -9,21 +9,21 @@
 
 4. Navigate to the desired directory: Use `cd` to navigate to the directory where you want to clone the project.
 
-5. Clone the repository: Run the command `git clone https://github.com/Steinbeck-Lab/cheminformatics-python-microservice.git` to clone the project.
+5. Clone the repository: Run the command `git clone https://github.com/NFDI4Chem/nmrkit.git` to clone the project.
 
 6. Use `cd` to navigate into the cloned project directory.
 
 You have successfully cloned the project from GitHub onto your local machine.
 
-Once cloned you can either choose to run the project via Docker (recommended) or locally (need to make sure you have all the dependencies resolved).
+Once cloned you can either choose to run the project via Docker-compose (recommended) or locally (need to make sure you have all the dependencies resolved).
 
 ## Docker
 
-1. Install Docker: Install Docker on your machine by following the instructions for your specific operating system.
+1. Install Docker: Install [Docker](https://img.docker.com/get-docker/) on your machine by following the instructions for your specific operating system.
 
-2. Use `cd` to navigate into the cloned project directory.
+2. Use `cd` to navigate into the cloned project directory and create a .env file which can be copied from .env.template and provide your own values for password and username.
 
-3. You will find a docker-compose.yml file in the project. If you don't have a docker-compose.yaml file uses the following template.
+3. You can use the docker-compose.yml file in the root directory, which is same as below and update accordingly if required.
 
 ```yaml
 version: "3.8"
@@ -33,58 +33,118 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    container_name: cheminformatics-python-microservice
+    container_name: nmrkit-api
     volumes:
       - ./app:/code/app
     ports:
       - "80:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/latest/chem"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/latest/ping"]
       interval: 1m30s
       timeout: 10s
       retries: 20
       start_period: 60s
-  Prometheus:
-    image: prom/Prometheus
-    container_name: Prometheus
+    env_file:
+      - ./.env
+  prometheus:
+    image: prom/prometheus
+    container_name: nmrkit_prometheus
     ports:
       - 9090:9090
     volumes:
-      - ./Prometheus_data/Prometheus.yml:/etc/Prometheus/Prometheus.yml
+      - ./prometheus_data/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
-      - '--config.file=/etc/Prometheus/Prometheus.yml'
-  Grafana:
-    image: Grafana/Grafana
-    container_name: Grafana
+      - '--config.file=/etc/prometheus/prometheus.yml'
+  grafana:
+    image: grafana/grafana
+    container_name: nmrkit_grafana
     ports:
       - 3000:3000
     volumes:
-      - Grafana_data:/var/lib/Grafana
+      - grafana_data:/var/lib/grafana
+  redis:
+    image: "redis:alpine"
+    ports:
+        - "${FORWARD_REDIS_PORT:-6379}:6379"
+    volumes:
+        - "redis:/data"
+    networks:
+        - default
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        retries: 3
+        timeout: 5s
+  pgsql:
+    image: "informaticsmatters/rdkit-cartridge-debian"
+    ports:
+      - "${FORWARD_DB_PORT:-5432}:5432"
+    env_file:
+      - ./.env
+    volumes:
+      - "pgsql:/var/lib/postgresql/data"
+    networks:
+      - default
+    healthcheck:
+      test:
+        [
+            "CMD",
+            "pg_isready",
+            "-q",
+            "-d",
+            "${POSTGRES_DB}",
+            "-U",
+            "${POSTGRES_USER}",
+        ]
+      retries: 3
+      timeout: 5s
+  minio:
+    image: 'minio/minio:latest'
+    ports:
+        - '${FORWARD_MINIO_PORT:-9001}:9001'
+        - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+    environment:
+        MINIO_ROOT_USER: 'sail'
+        MINIO_ROOT_PASSWORD: 'password'
+    volumes:
+        - 'minio:/data/minio'
+    networks:
+        - default
+    command: minio server /data/minio --console-address ":8900"
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+        retries: 3
+        timeout: 5s
 volumes:
-  Prometheus_data:
+  prometheus_data:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ./Prometheus_data
-  Grafana_data:
+      device: ./prometheus_data
+  grafana_data:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ./Grafana_data
+      device: ./grafana_data
+  redis:
+    driver: local
+  minio:
+    driver: local
+  pgsql:
+    driver: local
 networks:
   default: 
-    name: cpm_fastapi
+    name: nmrkit_vpc
 ```
 
-4. Run Docker Compose: Execute the command ```docker-compose up``` to start the containers defined in the Compose file.
+4. Run Docker Compose: Execute the command ```docker-compose up -d``` to start the containers defined in the Compose file.
 
 5. Wait for the containers to start: Docker Compose will start the containers and display their logs in the terminal or command prompt.
 
 Unicorn will start the app and display the server address (usually `http://localhost:80`) and Grafana dashboard can be accessed at `http://localhost:3000`
 
-You may update the docker-compose file to disable or add additional services but by default, the docker-compose file shipped with the project has the web (cheminformatics-python-microservice FAST API app), Prometheus and Grafana (logging and visualisation of metrics) services and associated volumes shared via a network.
+You may update the docker-compose file to disable or add additional services but by default, the docker-compose file shipped with the project has the web (nmrkit FAST API app), [rdkit-cartridge-debian](https://hub.docker.com/r/informaticsmatters/rdkit-cartridge-debian), [Prometheus](https://prometheus.io/img/introduction/overview/) and [Grafana](https://prometheus.io/img/introduction/overview/) (logging and visualisation of metrics), [Minio](https://min.io/img/minio/linux/index.html), [Redis](https://redis.io/img/) services.
 
 ## Standalone
 
@@ -137,7 +197,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--workers"
 
 The following instructions are based on the blog post - https://dev.to/ken_mwaura1/getting-started-monitoring-a-fastapi-app-with-Grafana-and-Prometheus-a-step-by-step-guide-3fbn
 
-To learn more about using Grafana in general, see the official [Prometheus](https://prometheus.io/docs/introduction/overview/) and [Grafana](https://grafana.com/docs/) documentation, or check out our other monitoring tutorials.
+To learn more about using Grafana in general, see the official [Prometheus](https://prometheus.io/img/introduction/overview/) and [Grafana](https://grafana.com/img/) documentation, or check out our other monitoring tutorials.
 
 :::
 
@@ -171,7 +231,7 @@ Grafana login
 Enter the default username and password (admin/admin) and click "Log In". You should be prompted to change the password. Enter a new password and click "Save". You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/grafana_login.jpeg" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana_login.jpeg" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 Grafana home
@@ -179,20 +239,20 @@ Grafana home
 Click on the "Create your first data source" button. You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/grafana.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 Grafana add the data source
 
 <p align="center">
-  <img align="center" src="/docs/grafana_ds.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana_ds.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 
 Click on the "Prometheus" button. You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/prometheus.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/prometheus.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 Enter the following information:
@@ -211,22 +271,22 @@ TLS CA Certificate: None <br/>
 Click on the "Save & Test" button. You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/grafana_ds_saved.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana_ds_saved.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 Click on the "Dashboards" button. You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/grafana_db.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana_db.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
 Click on the ""New Dashboard" button. You should see the following screen:
 
 <p align="center">
-  <img align="center" src="/docs/grafana_db_new.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
+  <img align="center" src="/img/grafana_db_new.png" alt="Logo" style="filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));" width="auto">
 </p>
 
-Download the Cheminformatics Microservice dashboard template (JSON) here - https://github.com/Steinbeck-Lab/cheminformatics-python-microservice/blob/main/cpm-dashboard.json
+Download the NMRKit dashboard template (JSON) here - https://github.com/NFDI4Chem/nmrkit/blob/main/api-dashboard.json
 
 ## Benchmarking / Stress testing
 
@@ -281,7 +341,7 @@ We recommend using flake8 and Black to perform linting and formatting in Python
 2. Linting with flake8: flake8 is a popular Python linter that checks your code for style and potential errors. Run flake8 by executing the following command in your project directory:
 
    ```bash
-   flake8 --ignore E501,W503 $(git ls-files '*.py')
+   flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files '*.py') .
    ```
 
    flake8 will analyze your code and provide feedback on any style violations or issues found.

@@ -2,9 +2,16 @@
 :::
 
 # Kubernetes deployment via Helm.
-Cheminformatics Python Microservices comes packaged with [Helm](https://helm.sh/docs/) chart which simplifies the deployment and management of applications on [Kubernetes](https://kubernetes.io/) by providing a convenient package manager interface. By following the steps outlined in this documentation, you can easily deploy this microservice using [Helm](https://helm.sh/docs/), enabling efficient and reproducible deployments in your [Kubernetes](https://kubernetes.io/) cluster.
+NMR Kit comes packaged with [Helm](https://helm.sh/docs/) chart which simplifies the deployment and management of applications on [Kubernetes](https://kubernetes.io/) by providing a convenient package manager interface. By following the steps outlined in this documentation, you can easily deploy this microservice using [Helm](https://helm.sh/docs/), enabling efficient and reproducible deployments in your [Kubernetes](https://kubernetes.io/) cluster.
 
-Please refer to Helm’s [documentation](https://helm.sh/docs/) to get started.
+The chart is packaged with below additional services as subcharts, which can be enabled or disabled via the value.yml file.
+* [minio - v12.6.12](https://artifacthub.io/packages/helm/bitnami/minio)
+* [redis - v17.14.6](https://artifacthub.io/packages/helm/bitnami/redis)
+* [grafana - v8.4.5](https://artifacthub.io/packages/helm/bitnami/grafana)
+* [prometheus - v22.6.5](https://prometheus-community.github.io/helm-charts/)
+* [rdkitcatridgepostgres - v0.1.0](https://nfdi4chem.github.io/repo-helm-charts)
+
+If you are new to Helm, please refer to Helm’s [documentation](https://helm.sh/docs/) to get started.
 
 **Prerequisites:**
 
@@ -22,10 +29,10 @@ If you had already added this repo earlier, run `helm repo update` to retrieve t
 
 * **Deploy the Chart:** To deploy the chart, use the helm install command followed by the chart package name and an optional release name:
 ```bash
-helm install myrelease repo-helm-charts/cheminfo-microservice
+helm install myrelease repo-helm-charts/nmrkit
 ```
 The release name (myrelease in this example) is used to identify the deployment, and it must be unique within the Kubernetes cluster.
-The above command with deploy the service with the default configuration provided in [values.yml](https://github.com/NFDI4Chem/repo-helm-charts/blob/main/charts/cheminfo-microservice/values.yaml) file. To overwrite the default configuration please follow this [link](https://helm.sh/docs/chart_template_guide/values_files/) to learn more.
+The above command with deploy the service with the default configuration provided in [values.yml](https://github.com/NFDI4Chem/repo-helm-charts/blob/main/charts/nmrkit/values.yaml) file. To overwrite the default configuration please follow this [link](https://helm.sh/docs/chart_template_guide/values_files/) to learn more.
 
 * Helm will install the chart and deploy the application to your Kubernetes cluster. You can view the deployed resources using kubectl commands:
 ```bash
@@ -34,7 +41,7 @@ kubectl get services
 ```
 * **Upgrading and Managing Deployments:** To upgrade an existing deployment, Use the `helm upgrade` command to apply the changes to the existing release e.g.
 ```bash
-helm upgrade myrelease repo-helm-charts/cheminfo-microservice-0.0.2
+helm upgrade myrelease repo-helm-charts/nmrkit-0.0.2
 ```
 
 * **Uninstalling the Chart:** To remove a deployed chart and associated resources, use the helm uninstall command:
@@ -45,7 +52,7 @@ This will delete all resources created by the chart, including pods, services, a
 
 
 ### Contribute or Report an issue
-Thank you for your valuable assistance in enhancing our deployment process. If you would like to contribute, kindly create a pull request in our [GitHub](https://github.com/NFDI4Chem/repo-helm-charts) repository. For any issues or bugs you have encountered, please feel free to create an [issue](https://github.com/NFDI4Chem/repo-helm-charts/issues) in the same or write to us at caffeine-devs@uni-jena.de. 
+Thank you for your valuable assistance in enhancing our deployment process. If you would like to contribute, kindly create a pull request in our [GitHub](https://github.com/NFDI4Chem/repo-helm-charts) repository. For any issues or bugs you have encountered, please feel free to create an [issue](https://github.com/NFDI4Chem/repo-helm-charts/issues) or reach out to us via our [Help Desk](https://helpdesk.nfdi4chem.de/).
 Your feedback is greatly appreciated.
 
 
