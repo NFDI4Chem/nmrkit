@@ -1,6 +1,3 @@
-:::danger Needs to be updated
-:::
-
 # Local development instructions
 
 1. Clone the project from [GitHub](https://github.com/NFDI4Chem/nmrkit)
