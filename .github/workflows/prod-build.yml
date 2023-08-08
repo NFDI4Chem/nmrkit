@@ -1,7 +1,7 @@
 
 # This worklflow will perform following actions when the code is pushed to main branch:
 # - Build the latest docker image in development which needs test to pass first.
-# - Push the docker image to Docker Hub under namespace - caffeinejena with tag:[release_version].
+# - Push the docker image to Docker Hub under namespace - nfdi4chem with tag:[release_version].
 # 
 # Maintainers:
 #   - name: Nisha Sharma
@@ -17,7 +17,7 @@ env:
   DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
   DOCKER_HUB_PASSWORD : ${{ secrets.DOCKER_PASSWORD  }}
   REPOSITORY_NAME: nmrkit
-  REPOSITORY_NAMESPACE: caffeinejena
+  REPOSITORY_NAMESPACE: nfdi4chem
 
 jobs:
   push_to_registry:

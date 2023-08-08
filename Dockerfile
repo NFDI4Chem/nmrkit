@@ -43,4 +43,10 @@ RUN python3 -m pip install uvicorn[standard]
 
 COPY ./app /code/app
 
+RUN curl -sL https://deb.nodesource.com/setup_current.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g npm@latest
+
+RUN npm install -g /code/app/scripts/nmr-cli
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "4", "--reload"]

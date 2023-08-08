@@ -1,7 +1,7 @@
 
 # This worklflow will perform following actions when the code is pushed to development branch:
 # - Build the latest docker image in development which needs test to pass first.
-# - Push the docker image to Docker Hub under namespace - caffeinejena with tag:dev-latest.
+# - Push the docker image to Docker Hub under namespace - nfdi4chem with tag:dev-latest.
 # 
 # Maintainers:
 #   - name: Nisha Sharma
@@ -17,7 +17,8 @@ env:
   DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
   DOCKER_HUB_PASSWORD : ${{ secrets.DOCKER_PASSWORD  }}
   REPOSITORY_NAME: nmrkit
-  REPOSITORY_NAMESPACE: caffeinejena
+  REPOSITORY_NAMESPACE: nfdi4chem
+  RELEASE_TAG: dev-latest
 
 jobs:
   test:
@@ -64,6 +65,6 @@ jobs:
           push: true
           build-args: |
             RELEASE_VERSION=dev-latest
-          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAME }}:dev-latest
+          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
           username: ${{ env.DOCKER_HUB_USERNAME  }}
           password: ${{ env.DOCKER_HUB_PASSWORD  }}

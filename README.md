@@ -1,4 +1,4 @@
-<p align="center"><a href="#" target="_blank"><img src="/public/img/logo.svg" width="400" alt="NMRKit Logo"></a></p>
+<p align="center"><a href="#" target="_blank"><img src="/public/img/logo.svg" width="400" alt="NMRKit Logo"></a></p> 
 
 [![License](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://opensource.org/licenses/MIT)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://github.com/NFDI4Chem/nmrkit/graphs/commit-activity)
@@ -49,5 +49,5 @@ NMRKit is developed and maintained by the [NFDI4Chem partners](https://www.nfdi4
 The code for this web application is released under the [MIT license](https://opensource.org/licenses/MIT).
 
 
-<p align="left"><a href="https://nfdi4chem.de/" target="_blank"><img src="https://www.nfdi4chem.de/wp-content/themes/wptheme/assets/img/logo.svg" width="50%" alt="NFDI4Chem Logo"></a></p>
+<p align="left"><a href="https://nfdi4chem.de/" target="_blank"><img src="https://www.nfdi4chem.de/wp-content/themes/wptheme/assets/img/logo.svg" width="30%" alt="NFDI4Chem Logo"></a></p>
 <p align="left"><a href="https://cheminf.uni-jena.de/" target="_blank"><img src="/public/img/fsu-jena.jpg" width="30%" alt="NFDI4Chem Logo"></a></p>
