@@ -1,6 +1,3 @@
-:::danger Needs to be updated
-:::
-
 # Kubernetes deployment via Helm.
 NMR Kit comes packaged with [Helm](https://helm.sh/docs/) chart which simplifies the deployment and management of applications on [Kubernetes](https://kubernetes.io/) by providing a convenient package manager interface. By following the steps outlined in this documentation, you can easily deploy this microservice using [Helm](https://helm.sh/docs/), enabling efficient and reproducible deployments in your [Kubernetes](https://kubernetes.io/) cluster.
 
