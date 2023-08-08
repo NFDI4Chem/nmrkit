@@ -1,9 +1,6 @@
-from typing import Annotated
-from fastapi import APIRouter, HTTPException, status, FastAPI, File, UploadFile
-from fastapi.responses import Response
+from fastapi import APIRouter, HTTPException, status, UploadFile
 from app.schemas import HealthCheck
 import subprocess
-import json
 
 router = APIRouter(
     prefix="/spectra",
@@ -11,6 +8,7 @@ router = APIRouter(
     dependencies=[],
     responses={404: {"description": "Not found"}},
 )
+
 
 @router.get("/", include_in_schema=False)
 @router.get(
@@ -41,7 +39,6 @@ def get_health() -> HealthCheck:
     summary="Parse the input spectra format and extract metadata",
     response_description="",
     status_code=status.HTTP_200_OK,
-    
 )
 async def parse_spectra(file: UploadFile):
     """
@@ -54,16 +51,23 @@ async def parse_spectra(file: UploadFile):
     try:
         contents = file.file.read()
         file_path = "/tmp/" + file.filename
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(contents)
-        p = subprocess.Popen("npx nmr-cli -p " + file_path, stdout=subprocess.PIPE, shell=True)
+        p = subprocess.Popen(
+            "npx nmr-cli -p " + file_path, stdout=subprocess.PIPE, shell=True
+        )
         (output, err) = p.communicate()
         p_status = p.wait()
         return output
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail="Error paring the structure " + e.message + ". Error: " + err + ". Status:" + p_status,
+            detail="Error paring the structure "
+            + e.message
+            + ". Error: "
+            + err
+            + ". Status:"
+            + p_status,
             headers={"X-Error": "RDKit molecule input parse error"},
         )
     finally:

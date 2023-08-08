@@ -1,9 +1,11 @@
 from typing import Annotated
 from psycopg2.errors import UniqueViolation
 from app.modules.cdkmodules import getCDKHOSECodes
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Body
 from app.modules.rdkitmodules import getRDKitHOSECodes
 from app.schemas import HealthCheck
+from app.schemas.alatis import AlatisModel
+import requests
 
 router = APIRouter(
     prefix="/chem",
@@ -70,6 +72,39 @@ async def HOSE_Codes(
                 "X-Error": "Molecule already exists. Duplicate entries are not allowed"
             },
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail="Error paring the structure " + e.message,
+            headers={"X-Error": "RDKit molecule input parse error"},
+        )
+
+
+@router.post(
+    "/label-atoms",
+    tags=["chem"],
+    summary="Label atoms using ALATIS naming system",
+    response_model=AlatisModel,
+    response_description="",
+    status_code=status.HTTP_200_OK,
+)
+async def label_atoms(
+    data: Annotated[
+        str,
+        Body(embed=False, media_type="text/plain"),
+    ]
+):
+    """
+    ## Generates atom labels for a given molecule
+
+    Returns:
+        JSON with various representations
+    """
+    try:
+        url = "http://alatis.nmrfam.wisc.edu/upload"
+        payload = {"input_text": data, "format": "format_", "response_type": "json"}
+        response = requests.request("POST", url, data=payload)
+        return response.json()
     except Exception as e:
         raise HTTPException(
             status_code=422,
