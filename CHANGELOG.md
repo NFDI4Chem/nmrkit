@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.2.0](https://github.com/NFDI4Chem/nmrkit/compare/v0.1.0...v0.2.0) (2023-08-11)
+
+
+### Features
+
+* add docker-compose file for dev and prod ([631eefc](https://github.com/NFDI4Chem/nmrkit/commit/631eefcc9495432b0021c2925a7b9aeb9d1dd54d))
+* updated health check endpoints ([a08b2e2](https://github.com/NFDI4Chem/nmrkit/commit/a08b2e2b5ddc13ec10e78b8549600b23b8c6830e))
+
+
+### Bug Fixes
+
+* add minio creds to .env.template ([fb65894](https://github.com/NFDI4Chem/nmrkit/commit/fb658940fb0d8d9aec189de8e90701830ad45b7e))
+* add Orcid Id for Hamed ([d861f1b](https://github.com/NFDI4Chem/nmrkit/commit/d861f1b85547614c4ddfb51691da4c0c4c65080b))
+* added spectra router ([62f6981](https://github.com/NFDI4Chem/nmrkit/commit/62f6981469b85397b298c979326c455a814a42d4))
+* flake8 errors fix ([927cc1c](https://github.com/NFDI4Chem/nmrkit/commit/927cc1c9baeb833bc9e34caf34271026ea33bd25))
+* install flake8 in release-please ([45ff613](https://github.com/NFDI4Chem/nmrkit/commit/45ff6134a6c83ea2663f4daf5a557bd56559685d))
+* move dockerhub to nfdi4chem namespace ([b25ada4](https://github.com/NFDI4Chem/nmrkit/commit/b25ada4656723314d752a5df1c290ae136241b76))
+* moved HOSE code endpoint to chem router and various other reorganisational changes ([41f50b7](https://github.com/NFDI4Chem/nmrkit/commit/41f50b7b86e0e57bc0640f4eae761c1fc5267766))
+* remove unused parameter from .env template ([93cc891](https://github.com/NFDI4Chem/nmrkit/commit/93cc891833a2491e9bae3008e1155d425de3ebad))
+* update Citation.cff ([8695c2f](https://github.com/NFDI4Chem/nmrkit/commit/8695c2f2ce0f4c051685dd4b5ac0618f3d9c52ae))
+* update Citation.cff ([cd83a27](https://github.com/NFDI4Chem/nmrkit/commit/cd83a2701c4fb6e42bcd96c3d9bdf2ec768fc0dd))
+* update Citation.cff ([#48](https://github.com/NFDI4Chem/nmrkit/issues/48)) ([0e01592](https://github.com/NFDI4Chem/nmrkit/commit/0e01592d7904b720a0e27269610f13e0cc61bfac))
+* update job name grafana dashboard json ([78152c0](https://github.com/NFDI4Chem/nmrkit/commit/78152c0e154bf8212870f02b287df0981a34a60e))
+
+
+### Documentation
+
+* add DFG credit in READMe ([5c3f450](https://github.com/NFDI4Chem/nmrkit/commit/5c3f4509a4f12e4889a7e08f1422499dbf09b021))
+* remove danger alert ([06c88e1](https://github.com/NFDI4Chem/nmrkit/commit/06c88e18fdb565b9fae1ea5760df23be5c70aa5d))
+* update API endpoint ([5625b41](https://github.com/NFDI4Chem/nmrkit/commit/5625b41c9b4cd32827e57c862e7125b6ba919eee))
+* update license ([db12f8c](https://github.com/NFDI4Chem/nmrkit/commit/db12f8c60b14df1f164a5fedc6e62ca88f21370e))
+* update pages-docker,cluster-deployment, ([ce67ac1](https://github.com/NFDI4Chem/nmrkit/commit/ce67ac13a505c3434aefe13950827be6df758597))
+* update README ([5e6a3a6](https://github.com/NFDI4Chem/nmrkit/commit/5e6a3a6d095f3e09e58d92487a463f6ae184db84))
+
 ## 0.1.0 (2023-08-03)
 
 
