@@ -16,7 +16,7 @@ export default defineConfigWithTheme<ThemeConfig>({
         },
         nav: [
             { text: 'Home', link: '/nmrkit/introduction' },
-            { text: 'API', link: 'https://api.nmrxiv.org/latest/docs' },
+            { text: 'API', link: 'https://dev.nmrkit.nmrxiv.org/latest/docs' },
             { text: 'GitHub', link: 'https://github.com/NFDI4Chem/nmrkit' }
         ],
         sidebar: [
