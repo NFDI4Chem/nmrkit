@@ -1,0 +1,60 @@
+
+# This worklflow will perform following actions when the code is pushed to main branch.
+# - Test linting with pylint.
+# - Test the code with pytest.
+# - Trigger release-please action to create release which needs test to pass first.
+# 
+# Maintainers:
+#   - name: Nisha Sharma
+#   - email: nisha.sharma@uni-jena.de
+
+name: release-please-action
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+        postgres:
+            image: postgres:latest
+            env:
+                POSTGRES_USER: postgres
+                POSTGRES_PASSWORD: postgres
+                POSTGRES_DB: nmr_predict
+                POSTGRES_SERVER: pgsql
+            ports:
+                - 5432:5432
+            options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip3 install --upgrade setuptools pip
+        pip3 install --no-cache-dir -r requirements.txt
+        pip3 install rdkit
+        python3 -m pip uninstall -y imantics
+        pip3 install imantics==0.1.12
+        pip3 install openbabel-wheel
+        git clone "https://github.com/rinikerlab/lightweight-registration.git" lwreg
+        chmod +x lwreg
+        pip3 install --editable ./lwreg/.
+        pip install flake8 pytest
+    - name: Analysing the code with pylint
+      run: |
+        flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files '*.py') .
+    - name: Run test
+      run: |
+        python3 -m pytest -p no:warnings
