@@ -70,7 +70,7 @@ async def initialise_database(confirm: Annotated[bool, Body(embed=True)] = False
     summary="Registers new molecules",
     response_description="Returns the new registry number(s) (molregno). If all entries are duplicates exception is raised",
     status_code=status.HTTP_200_OK,
-    response_model=List[str | int],
+    response_model=List[Union[str, int]],
 )
 async def register_compounds(
     data: Annotated[
