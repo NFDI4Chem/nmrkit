@@ -14,7 +14,7 @@ def test_smiles():
 
 
 @pytest.fixture
-def molfile1():
+def molfile():
     return """
   CDK     08302311362D
 
@@ -74,11 +74,9 @@ def test_hosecode(smiles, boolean, framework, expected_result):
     assert response.text == expected_result
 
 
-def test_label_atoms(molfile1):
+def test_label_atoms(molfile):
     response = client.post(
-        "/latest/chem/label-atoms",
-        data=molfile1,
-        headers={"Content-Type": "text/plain"},
+        "/latest/chem/label-atoms", data=molfile, headers={"Content-Type": "text/plain"}
     )
     assert response.status_code == 200
     assert "html_url" in response.json()

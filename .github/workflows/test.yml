@@ -1,19 +1,16 @@
 
-# This worklflow will perform following actions when the code is pushed to main branch.
-# - Test linting with pylint.
+# This worklflow will perform unit test and check linting.
+# - Test linting with flake8
 # - Test the code with pytest.
-# - Trigger release-please action to create release which needs test to pass first.
 # 
 # Maintainers:
 #   - name: Nisha Sharma
 #   - email: nisha.sharma@uni-jena.de
 
-name: release-please-action
+name: test
 
 on:
-  push:
-    branches:
-      - unit-test
+  workflow_call:
 
 jobs:
   test:
@@ -47,7 +44,6 @@ jobs:
         echo POSTGRES_SERVER="pgsql" >> .env
         echo POSTGRES_PORT=5432 >> .env
         echo POSTGRES_DB=nmr_predict >> .env
-        cat .env
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -61,9 +57,9 @@ jobs:
         chmod +x lwreg
         pip3 install --editable ./lwreg/.
         pip install flake8 pytest
-    # - name: Analysing the code with pylint
-    #   run: |
-    #     flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files '*.py') .
+    - name: Analysing the code with pylint
+      run: |
+        flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files '*.py') .
     - name: Run test
       run: |
         python3 -m pytest -p no:warnings --ignore=lwreg/lwreg/test-cli.py --ignore=lwreg/lwreg/test_lwreg.py

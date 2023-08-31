@@ -73,10 +73,7 @@ async def initialise_database(confirm: Annotated[bool, Body(embed=True)] = False
     response_model=List[Union[str, int]],
 )
 async def register_compounds(
-    data: Annotated[
-        str,
-        Body(embed=False, media_type="text/plain"),
-    ] = "CCCC"
+    data: Annotated[str, Body(embed=False, media_type="text/plain")] = "CCCC"
 ):
     """
     ## Registers new molecules, assuming it doesn't already exist,
@@ -139,10 +136,7 @@ async def query_compounds(smi: str):
         res = query(smiles=smi, config=LWREG_CONFIG)
         return res
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Internal Server Error" + e.message,
-        )
+        raise HTTPException(status_code=500, detail="Internal Server Error" + e.message)
 
 
 @router.post(
@@ -165,7 +159,4 @@ async def retrieve_compounds(ids: List[int]):
         res = retrieve(ids=ids, config=LWREG_CONFIG)
         return res
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Internal Server Error" + e.message,
-        )
+        raise HTTPException(status_code=500, detail="Internal Server Error" + e.message)

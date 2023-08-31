@@ -1,0 +1,10 @@
+name: Unit Test Dev Checking
+
+on:  
+  pull_request:
+    branches:
+        - development
+
+jobs:
+    test_and_lint:
+        uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main 

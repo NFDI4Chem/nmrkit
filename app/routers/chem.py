@@ -88,12 +88,7 @@ async def HOSE_Codes(
     response_description="",
     status_code=status.HTTP_200_OK,
 )
-async def label_atoms(
-    data: Annotated[
-        str,
-        Body(embed=False, media_type="text/plain"),
-    ]
-):
+async def label_atoms(data: Annotated[str, Body(embed=False, media_type="text/plain")]):
     """
     ## Generates atom labels for a given molecule
 
