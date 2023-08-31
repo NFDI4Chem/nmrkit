@@ -16,7 +16,7 @@ router = APIRouter(
     prefix="/registration",
     tags=["registration"],
     dependencies=[],
-    responses={404: {"description": "Not found"}},
+    responses={404: {"description": "Not Found"}},
 )
 
 
@@ -33,9 +33,9 @@ router = APIRouter(
 def get_health() -> HealthCheck:
     """
     ## Perform a Health Check
-    Endpoint to perform a healthcheck on. This endpoint can primarily be used Docker
+    Endpoint to perform a healthcheck on. This endpoint can primarily be used by Docker
     to ensure a robust container orchestration and management is in place. Other
-    services which rely on proper functioning of the API service will not deploy if this
+    services which rely on the proper functioning of the API service will not deploy if this
     endpoint returns any other HTTP status code except 200 (OK).
     Returns:
         HealthCheck: Returns a JSON response with the health status
@@ -70,13 +70,10 @@ async def initialise_database(confirm: Annotated[bool, Body(embed=True)] = False
     summary="Registers new molecules",
     response_description="Returns the new registry number(s) (molregno). If all entries are duplicates exception is raised",
     status_code=status.HTTP_200_OK,
-    response_model=List[str | int],
+    response_model=List[Union[str, int]],
 )
 async def register_compounds(
-    data: Annotated[
-        str,
-        Body(embed=False, media_type="text/plain"),
-    ] = "CCCC"
+    data: Annotated[str, Body(embed=False, media_type="text/plain")] = "CCCC"
 ):
     """
     ## Registers new molecules, assuming it doesn't already exist,
@@ -139,16 +136,13 @@ async def query_compounds(smi: str):
         res = query(smiles=smi, config=LWREG_CONFIG)
         return res
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Internal Server Error" + e.message,
-        )
+        raise HTTPException(status_code=500, detail="Internal Server Error" + e.message)
 
 
 @router.post(
     "/retrieve",
     tags=["registration"],
-    summary="Retrieves entries based on the list of ids provided",
+    summary="Retrieves entries based on the list of IDs provided",
     response_model=tuple(),
     response_description="Returns HTTP Status Code 200 (OK)",
     status_code=status.HTTP_200_OK,
@@ -165,7 +159,4 @@ async def retrieve_compounds(ids: List[int]):
         res = retrieve(ids=ids, config=LWREG_CONFIG)
         return res
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Internal Server Error" + e.message,
-        )
+        raise HTTPException(status_code=500, detail="Internal Server Error" + e.message)

@@ -18,9 +18,7 @@ depends_on = None
 
 def create_molecular_registration_tables() -> None:
     op.create_table(
-        "registration_metadata",
-        sa.Column("key", sa.Text),
-        sa.Column("value", sa.Text),
+        "registration_metadata", sa.Column("key", sa.Text), sa.Column("value", sa.Text)
     )
     op.create_table(
         "hashes",
