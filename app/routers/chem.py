@@ -54,7 +54,7 @@ async def HOSE_Codes(
 ) -> list[str]:
     """
     ## Generates HOSE codes for a given molecule
-    Endpoint to generate HOSE codes based on for each atom in the givem molecule.
+    Endpoint to generate HOSE codes based on each atom in the given molecule.
 
     Returns:
         HOSE Codes: An array of hose codes generated
@@ -75,7 +75,7 @@ async def HOSE_Codes(
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail="Error paring the structure " + e.message,
+            detail="Error parsing the structure " + e.message,
             headers={"X-Error": "RDKit molecule input parse error"},
         )
 
@@ -108,6 +108,6 @@ async def label_atoms(
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail="Error paring the structure " + e.message,
+            detail="Error parsing the structure " + e.message,
             headers={"X-Error": "RDKit molecule input parse error"},
         )

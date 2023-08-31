@@ -3,6 +3,7 @@ import requests
 from fastapi.testclient import TestClient
 from app.main import app
 import random
+from app.schemas.alatis import AlatisModel
 
 client = TestClient(app)
 
@@ -15,7 +16,6 @@ def test_smiles():
 @pytest.fixture
 def molfile1():
     return """
-
   CDK     08302311362D
 
   4  3  0  0  0  0  0  0  0  0999 V2000
@@ -74,16 +74,19 @@ def test_hosecode(smiles, boolean, framework, expected_result):
     assert response.text == expected_result
 
 
-"""
-def test_label_atoms(molfile):
-    headers = {
-        "Content-Type": "text/plain",  # Indicate that the payload is plain text
-    }
-
-    response = client.post("/latest/chem/label-atoms", data=molfile.encode(), headers=headers)
-
+def test_label_atoms(molfile1):
+    response = client.post(
+        "/latest/chem/label-atoms",
+        data=molfile1,
+        headers={"Content-Type": "text/plain"},
+    )
     assert response.status_code == 200
-"""
+    assert "html_url" in response.json()
+    assert "inchi" in response.json()
+    assert "key" in response.json()
+    assert "status" in response.json()
+    assert "structure" in response.json()
+
 
 # Run the tests
 if __name__ == "__main__":
