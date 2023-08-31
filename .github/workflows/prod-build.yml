@@ -1,6 +1,6 @@
 
 # This worklflow will perform following actions when the code is pushed to main branch:
-# - Build the latest docker image in development which needs test to pass first.
+# - Build the latest docker image in main which needs test to pass first.
 # - Push the docker image to Docker Hub under namespace - nfdi4chem with tag:[release_version].
 # 
 # Maintainers:
