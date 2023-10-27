@@ -13,8 +13,8 @@
     "nmr-cli": "./bin/index.js"
   },
   "dependencies": {
-    "filelist-utils": "^1.10.0",
-    "nmr-load-save": "^0.15.2",
+    "filelist-utils": "^1.10.2",
+    "nmr-load-save": "^0.22.4",
     "yargs": "^17.7.2"
   }
 }
