@@ -31,11 +31,6 @@ services:
       start_period: 60s
     env_file:
       - ./.env
-  nmr-cli:
-    build:
-      context: ./app/scripts/nmr-cli
-      dockerfile: Dockerfile
-    container_name: nmr-cli
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
