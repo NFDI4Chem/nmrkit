@@ -1,6 +1,11 @@
 version: "3.8"
 
 services:
+  nmrcli:
+    build: ./app/scripts/nmr-cli
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
   web:
     build:
       context: ./
@@ -11,7 +16,13 @@ services:
     ports:
       - "80:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/latest/ping"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:80/latest/ping"
+        ]
       interval: 1m30s
       timeout: 10s
       retries: 20
@@ -37,15 +48,15 @@ services:
   redis:
     image: "redis:alpine"
     ports:
-        - "${FORWARD_REDIS_PORT:-6379}:6379"
+      - "${FORWARD_REDIS_PORT:-6379}:6379"
     volumes:
-        - "redis:/data"
+      - "redis:/data"
     networks:
-        - default
+      - default
     healthcheck:
-        test: ["CMD", "redis-cli", "ping"]
-        retries: 3
-        timeout: 5s
+      test: [ "CMD", "redis-cli", "ping" ]
+      retries: 3
+      timeout: 5s
   pgsql:
     image: "informaticsmatters/rdkit-cartridge-debian"
     ports:
@@ -59,33 +70,39 @@ services:
     healthcheck:
       test:
         [
-            "CMD",
-            "pg_isready",
-            "-q",
-            "-d",
-            "${POSTGRES_DB}",
-            "-U",
-            "${POSTGRES_USER}",
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "${POSTGRES_DB}",
+          "-U",
+          "${POSTGRES_USER}"
         ]
       retries: 3
       timeout: 5s
   minio:
     image: 'minio/minio:latest'
     ports:
-        - '${FORWARD_MINIO_PORT:-9001}:9001'
-        - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+      - '${FORWARD_MINIO_PORT:-9001}:9001'
+      - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
     environment:
-        MINIO_ROOT_USER: 'sail'
-        MINIO_ROOT_PASSWORD: 'password'
+      MINIO_ROOT_USER: 'sail'
+      MINIO_ROOT_PASSWORD: 'password'
     volumes:
-        - 'minio:/data/minio'
+      - 'minio:/data/minio'
     networks:
-        - default
+      - default
     command: minio server /data/minio --console-address ":8900"
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
-        retries: 3
-        timeout: 5s
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9001/minio/health/live"
+        ]
+      retries: 3
+      timeout: 5s
 volumes:
   prometheus_data:
     driver: local
@@ -106,5 +123,5 @@ volumes:
   pgsql:
     driver: local
 networks:
-  default: 
+  default:
     name: nmrkit_vpc
