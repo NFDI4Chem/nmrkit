@@ -1,13 +1,6 @@
 version: "3.8"
 
 services:
-  nmrcli:
-    build: ./app/scripts/nmr-cli
-    entrypoint: /bin/sh
-    stdin_open: true
-    tty: true
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
   web:
     build:
       context: ./
@@ -31,6 +24,20 @@ services:
       start_period: 60s
     env_file:
       - ./.env
+  nmr-load-save:
+    build: ./app/scripts/nmr-cli
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  nmr-respredict:
+    build: ./app/scripts/nmr-respredict
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
