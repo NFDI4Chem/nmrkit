@@ -2,12 +2,14 @@ version: "3.8"
 
 services:
   web:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    # build:
+    #   context: ./
+    #   dockerfile: Dockerfile
+    image: nfdi4chem/nmrkit:dev-latest
     container_name: nmrkit-api
     volumes:
       - ./app:/code/app
+      - "/var/run/docker.sock:/var/run/docker.sock"
     ports:
       - "80:80"
     healthcheck:
@@ -29,15 +31,11 @@ services:
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
   nmr-respredict:
     build: ./app/scripts/nmr-respredict
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
