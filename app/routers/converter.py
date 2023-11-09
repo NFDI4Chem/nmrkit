@@ -1,8 +1,8 @@
 import subprocess
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from app.schemas import HealthCheck
 from urllib.parse import unquote
-
+import json
 
 router = APIRouter(
     prefix="/convert",
@@ -10,6 +10,7 @@ router = APIRouter(
     dependencies=[],
     responses={404: {"description": "Not Found"}},
 )
+
 
 @router.get("/", include_in_schema=False)
 @router.get(
@@ -38,7 +39,7 @@ def get_health() -> HealthCheck:
     "/nmrLoadSave",
     tags=["converter"],
     summary="Conversion through nmr-load save",
-   # response_model=List[int],
+    # response_model=List[int],
     response_description="Conversion through nmr-load save",
     status_code=status.HTTP_200_OK,
 )
@@ -49,31 +50,14 @@ async def nmr_load_save(url: str):
     Returns:
         Return nmr_load save result
     """
-   # url = "https://cheminfo.github.io/bruker-data-test/data/zipped/aspirin-1h.zip"
-   # command = f"docker exec -it nmrkit_nmr-load-save_1 nmr-cli -u {url}"
-    try:
-        process = subprocess.run("docker exec -it nmrkit_nmr-load-save_1 nmr-cli -u " + unqoute(url),
-                                stdout=subprocess.PIPE,
-                                capture_output=True,
-                                shell=True)
-       # process = subprocess.run(['docker', 'exec', '-it', 'nmrkit_nmr-load-save_1', 'nmr-cli', '-u', unquote(url)], capture_output=True, shell=True)
-       # print('printing result..')
-       # print(process.stdout)
-       # return {"output": process.stdout}
-       # (output, err) = process.communicate()
-       # process_status = process.wait()
-       # print (output)
-       # return str(output)
-        while True:
-            output = process.stdout.readline()
-            print(output.strip())
-            # Do something else
-            return_code = process.poll()
-            if return_code is not None:
-                print('RETURN CODE', return_code)
-                # Process has finished, read rest of the output
-                for output in process.stdout.readlines():
-                    print(output.strip())
-                break
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error" + e.message)
+    process = subprocess.Popen(
+        ["docker exec nmr-converter nmr-cli -u " + url],
+        stdout=subprocess.PIPE,
+        shell=True,
+    )
+    (output, err) = process.communicate()
+    process.wait()
+    if err:
+        raise HTTPException(status_code=500, detail=err)
+    else:
+        return Response(content=output, media_type="application/json")

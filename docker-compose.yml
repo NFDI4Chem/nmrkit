@@ -2,10 +2,10 @@ version: "3.8"
 
 services:
   web:
-    # build:
-    #   context: ./
-    #   dockerfile: Dockerfile
-    image: nfdi4chem/nmrkit:dev-latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    # image: nfdi4chem/nmrkit:dev-latest
     container_name: nmrkit-api
     volumes:
       - ./app:/code/app
@@ -31,6 +31,7 @@ services:
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
+    container_name: nmr-converter
   nmr-respredict:
     build: ./app/scripts/nmr-respredict
     entrypoint: /bin/sh
