@@ -36,19 +36,19 @@ def get_health() -> HealthCheck:
 
 
 @router.get(
-    "/nmrLoadSave",
+    "/spectra",
     tags=["converter"],
-    summary="Conversion through nmr-load save",
-    # response_model=List[int],
-    response_description="Conversion through nmr-load save",
+    summary="Load and convert NMR raw data",
+    #response_model=List[int],
+    response_description="Load and convert NMR raw data",
     status_code=status.HTTP_200_OK,
 )
 async def nmr_load_save(url: str):
     """
-    ## Return nmr_load save result
+    ## Return nmrium json
 
     Returns:
-        Return nmr_load save result
+        Return nmrium json
     """
     process = subprocess.Popen(
         ["docker exec nmr-converter nmr-cli -u " + url],
