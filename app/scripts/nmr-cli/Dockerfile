@@ -12,8 +12,6 @@ COPY package.json ./
 COPY package-lock.json ./
 RUN npm install
 
-RUN apk add docker
-
 COPY . ./
 
 #install the nmr-cli as a global package 

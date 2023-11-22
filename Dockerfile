@@ -1,7 +1,6 @@
 FROM continuumio/miniconda3 AS nmrkit-ms
 
 ENV PYTHON_VERSION=3.10
-ENV RDKIT_VERSION=2023.03.1
 ENV OPENBABEL_VERSION=v3.1
 
 ARG RELEASE_VERSION
@@ -15,9 +14,12 @@ RUN apt-get update && \
     apt-get install -y curl && \
     conda update -n base -c defaults conda
 
+RUN apt-get update && apt-get -y install docker.io
+
 RUN conda install -c conda-forge python>=PYTHON_VERSION
-RUN conda install -c conda-forge rdkit>=RDKIT_VERSION
 RUN conda install -c conda-forge openbabel>=OPENBABEL_VERSION
+
+RUN pip3 install rdkit
 
 RUN python3 -m pip install -U pip
 
