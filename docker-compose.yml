@@ -37,6 +37,11 @@ services:
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
+  nmr-snapshot:
+    build: ./app/scripts/nmr-snapshot-cli
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
