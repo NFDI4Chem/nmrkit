@@ -39,7 +39,7 @@ def get_health() -> HealthCheck:
     "/spectra",
     tags=["converter"],
     summary="Load and convert NMR raw data",
-    #response_model=List[int],
+    # response_model=List[int],
     response_description="Load and convert NMR raw data",
     status_code=status.HTTP_200_OK,
 )

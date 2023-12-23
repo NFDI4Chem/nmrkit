@@ -10,6 +10,7 @@ services:
     volumes:
       - ./app:/code/app
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - shared-data:/shared
     ports:
       - "80:80"
     healthcheck:
@@ -37,6 +38,9 @@ services:
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
+    container_name: nmr-respredict
+    volumes:
+      - shared-data:/shared
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
@@ -130,6 +134,7 @@ volumes:
     driver: local
   pgsql:
     driver: local
+  shared-data:
 networks:
   default:
     name: nmrkit_vpc

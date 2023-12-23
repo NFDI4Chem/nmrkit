@@ -5,7 +5,7 @@ from fastapi_versioning import VersionedFastAPI
 
 from .routers import registration
 from .routers import chem
-from .routers import spectra, converter
+from .routers import spectra, converter, predict
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import config, tasks
@@ -32,6 +32,7 @@ app.include_router(registration.router)
 app.include_router(chem.router)
 app.include_router(spectra.router)
 app.include_router(converter.router)
+app.include_router(predict.router)
 
 app.add_event_handler("startup", tasks.create_start_app_handler(app))
 app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
