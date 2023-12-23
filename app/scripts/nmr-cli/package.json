@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "filelist-utils": "^1.10.2",
-    "nmr-load-save": "^0.22.4",
+    "nmr-load-save": "^0.23.11",
+    "playwright": "^1.40.1",
     "yargs": "^17.7.2"
   }
 }

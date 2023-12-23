@@ -1,15 +1,19 @@
 # build the image ` docker build --tag nmr-cli  . ` 
 # run the container ` docker run -it nmr-cli bash `
 
-FROM node:20.9.0-alpine
-# a temporary command to add bash to the Docker image to be able to run the container with an interactive Shell for testing purpose
-RUN apk update && apk add bash
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /app
 
+#ENV BASE_NMRIUM_URL=https://nmrium.nmrxiv.org/
+ENV BASE_NMRIUM_URL=https://nmriumdev.nmrxiv.org/
+
+
 COPY package.json ./
 COPY package-lock.json ./
+
 RUN npm install
 
 COPY . ./
