@@ -1,9 +1,6 @@
 import pytest
-import requests
 from fastapi.testclient import TestClient
 from app.main import app
-import random
-from app.schemas.alatis import AlatisModel
 
 client = TestClient(app)
 

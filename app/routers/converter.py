@@ -1,8 +1,6 @@
 import subprocess
 from fastapi import APIRouter, HTTPException, status, Response
 from app.schemas import HealthCheck
-from urllib.parse import unquote
-import json
 
 router = APIRouter(
     prefix="/convert",

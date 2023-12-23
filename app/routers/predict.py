@@ -1,10 +1,8 @@
 import subprocess
 from fastapi import APIRouter, HTTPException, status, Response, Body
 from app.schemas import HealthCheck
-from urllib.parse import unquote
 from app.schemas.respredict_response_schema import ResPredictModel
 from app.schemas.error import ErrorResponse, BadRequestModel, NotFoundModel
-import json
 import uuid
 from typing import Annotated
 import os
