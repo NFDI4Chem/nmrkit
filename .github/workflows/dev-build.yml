@@ -54,8 +54,8 @@ jobs:
       - name: Build and push nmr-cli Docker image
         uses: docker/build-push-action@v4
         with:
-          context: ./app/scripts/nmr-cli
-          file: ./Dockerfile
+          context: .
+          file: ./app/scripts/nmr-cli/Dockerfile
           push: true
           build-args: |
             RELEASE_VERSION=dev-latest
