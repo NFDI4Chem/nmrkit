@@ -1,5 +1,5 @@
 [flake8]
 exclude =
     ./app/scripts/nmr-respredict/*.py
-    /lwreg/lwreg/*.py
-    /lwreg/*.py
+    ./lwreg/lwreg/*.py
+    ./lwreg/*.py
