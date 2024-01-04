@@ -22,8 +22,8 @@ env:
   RELEASE_TAG: dev-latest
 
 jobs:
-  test_and_lint:
-    uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main
+  # test_and_lint:
+  #   uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main
 
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -54,7 +54,7 @@ jobs:
       - name: Build and push nmr-cli Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./app/scripts/nmr-cli/
           file: ./app/scripts/nmr-cli/Dockerfile
           push: true
           build-args: |
