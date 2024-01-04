@@ -11,12 +11,13 @@ name : Dev Build, Test and Publish
 
 on:
   push:
-    branches: [development]
+    branches: [dev-nisha]
 
 env:
   DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
   DOCKER_HUB_PASSWORD : ${{ secrets.DOCKER_PASSWORD  }}
-  REPOSITORY_NAME: nmrkit
+  NMRKIT_REPOSITORY_NAME: nmrkit
+  NMR_CLI_REPOSITORY_NAME: nmrkit
   REPOSITORY_NAMESPACE: nfdi4chem
   RELEASE_TAG: dev-latest
 
@@ -38,14 +39,26 @@ jobs:
           username: ${{ env.DOCKER_HUB_USERNAME  }}
           password: ${{ env.DOCKER_HUB_PASSWORD  }}
       
-      - name: Build and push Docker image
+      # - name: Build and push nmrKit Docker image
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile
+      #     push: true
+      #     build-args: |
+      #       RELEASE_VERSION=dev-latest
+      #     tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+      #     username: ${{ env.DOCKER_HUB_USERNAME  }}
+      #     password: ${{ env.DOCKER_HUB_PASSWORD  }}
+
+      - name: Build and push nmr-cli Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./app/scripts/nmr-cli
           file: ./Dockerfile
           push: true
           build-args: |
             RELEASE_VERSION=dev-latest
-          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
           username: ${{ env.DOCKER_HUB_USERNAME  }}
           password: ${{ env.DOCKER_HUB_PASSWORD  }}
