@@ -59,7 +59,7 @@ jobs:
         pip install flake8 pytest
     - name: Analysing the code with pylint
       run: |
-        flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files 'app/*.py') --ignore=lwreg/lwreg/ .
+        flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files 'app/*.py') .
     - name: Run test
       run: |
         python3 -m pytest -p no:warnings --ignore=lwreg/lwreg/test-cli.py --ignore=lwreg/lwreg/test_lwreg.py
