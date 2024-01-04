@@ -22,8 +22,8 @@ env:
   RELEASE_TAG: dev-latest
 
 jobs:
-  # test_and_lint:
-  #   uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main
+  test_and_lint:
+    uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main
 
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -39,17 +39,17 @@ jobs:
           username: ${{ env.DOCKER_HUB_USERNAME  }}
           password: ${{ env.DOCKER_HUB_PASSWORD  }}
       
-      # - name: Build and push nmrKit Docker image
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: .
-      #     file: ./Dockerfile
-      #     push: true
-      #     build-args: |
-      #       RELEASE_VERSION=dev-latest
-      #     tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-      #     username: ${{ env.DOCKER_HUB_USERNAME  }}
-      #     password: ${{ env.DOCKER_HUB_PASSWORD  }}
+      - name: Build and push nmrKit Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          build-args: |
+            RELEASE_VERSION=dev-latest
+          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          username: ${{ env.DOCKER_HUB_USERNAME  }}
+          password: ${{ env.DOCKER_HUB_PASSWORD  }}
 
       - name: Build and push nmr-cli Docker image
         uses: docker/build-push-action@v4
