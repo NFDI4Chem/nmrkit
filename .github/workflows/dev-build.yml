@@ -11,7 +11,7 @@ name : Dev Build, Test and Publish
 
 on:
   push:
-    branches: [dev-nisha]
+    branches: [development]
 
 env:
   DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
