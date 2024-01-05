@@ -1,5 +1,5 @@
 
-# This worklflow will perform following actions when the code is pushed to development branch:
+# This worklflow will perform following actions when the code is pushed to the development branch:
 # - Build the latest docker image in development which needs test to pass first.
 # - Push the docker image to Docker Hub under namespace - nfdi4chem with tag:dev-latest.
 # 
