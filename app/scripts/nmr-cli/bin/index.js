@@ -1,166 +1,81 @@
 #!/usr/bin/env node
-const { join, isAbsolute } = require("path");
 const yargs = require("yargs");
-const loader = require("nmr-load-save");
-const fileUtils = require("filelist-utils");
-const playwright = require('playwright');
-
-const usageMessage = "Usage: nmr-cli -u <url> or -p <path> -s<Optional parameter to capture spectra snapshots>"
+const { loadSpectrumFromURL, loadSpectrumFromFilePath } = require("./prase-spectra");
 
 
-/**
- * How to Use the Command Line Tool:
- * Example 1: Process spectra files from a URL
- * Usage: nmr-cli -u https://example.com/file.zip
- * -------------------------------------------------------------------------
- * Example 2: process a spectra files from a directory
- * Usage: nmr-cli  -p /path/to/directory
- * -------------------------------------------------------------------------
- * you could also combine the above examples with an optional parameter to capturing a snapshot using the -s option
- * 
- */
+const usageMessage = `
+Usage: nmr-cli  <command> [options]
 
-const options = yargs
-  .usage(usageMessage)
-  .option("u", { alias: "url", describe: "File URL", type: "string", nargs: 1 })
-  .option("p", { alias: "path", describe: "Directory path", type: "string", nargs: 1 })
-  .option("s", { alias: "capture-snapshot", describe: "Capture snapshot", type: "boolean" }).showHelpOnFail();
+Commands:
+  parse-spectra                Parse a spectra file to NMRium file
 
+Options for 'parse-spectra' command:
+  -u, --url           File URL
+  -p, --path          Directory path
+  -s, --capture-snapshot   Capture snapshot
 
+Examples:
+  nmr-cli  parse-spectra -u file-url -s                                   // Process spectra files from a URL and capture an image for the spectra
+  nmr-cli  parse-spectra -p directory-path -s                             // process a spectra files from a directory and capture an image for the spectra
+  nmr-cli  parse-spectra -u file-url                                      // Process spectra files from a URL 
+  nmr-cli  parse-spectra -p directory-path                                // Process spectra files from a directory 
+`;
 
 
-function generateNMRiumURL() {
-  const baseURL = process.env['BASE_NMRIUM_URL'];
-  const url = new URL(baseURL)
-  url.searchParams.append('workspace', "embedded")
-  return url.toString()
-}
+// Define options for parsing a file
+const fileOptions = {
+  u: {
+    alias: 'url',
+    describe: 'File URL',
+    type: 'string',
+    nargs: 1,
+  },
+  p: {
+    alias: 'path',
+    describe: 'Directory path',
+    type: 'string',
+    nargs: 1,
+  },
+  s: {
+    alias: 'capture-snapshot',
+    describe: 'Capture snapshot',
+    type: 'boolean',
+  },
+};
 
-async function captureSpectraViewAsBase64(nmriumState) {
-  const { data: { spectra }, version } = nmriumState;
-  const browser = await playwright.chromium.launch()
-  const context = await browser.newContext(playwright.devices['Desktop Chrome HiDPI'])
-  const page = await context.newPage()
 
-  const url = generateNMRiumURL()
-
-  await page.goto(url)
-
-  await page.locator('text=Loading').waitFor({ state: 'hidden' });
-
-  let snapshots = []
-
-  for (const spectrum of spectra || []) {
-    const spectrumObject = {
-      version,
-      data: {
-        spectra: [{ ...spectrum }],
-      }
-
-    }
-
-    // convert typed array to array
-    const stringObject = JSON.stringify(spectrumObject, (key, value) => {
-      return ArrayBuffer.isView(value) ? Array.from(value) : value
-    })
-
-    // load the spectrum into NMRium using the custom event
-    await page.evaluate(
-      `
-      window.postMessage({ type: "nmr-wrapper:load", data:{data: ${stringObject},type:"nmrium"}}, '*');
-      `
-    )
-
-    //wait for NMRium process and load spectra
-    await page.locator('text=Loading').waitFor({ state: 'hidden' });
-
-    // take a snapshot for the spectrum
-    try {
-      const snapshot = await page.locator('#nmrSVG .container').screenshot()
-
-      snapshots.push({
-        image: snapshot.toString('base64'),
-        id: spectrum.id,
+// Define the 'parse-file' command
+const parseFileCommand = {
+  command: ['parse-spectra', 'ps'],
+  describe: 'Parse a spectra file to NMRium file',
+  builder: (yargs) => {
+    return yargs.options(fileOptions).conflicts('u', 'p');
+  },
+  handler: (argv) => {
+    // Handle parsing the spectra file logic based on argv options
+    console.log(argv)
+    if (argv?.u) {
+      loadSpectrumFromURL(argv.u, argv.s).then((result) => {
+        console.log(JSON.stringify(result))
       })
-    } catch (e) {
-      console.log(e)
+
     }
-  }
 
-  await context.close()
-  await browser.close()
+    if (argv?.p) {
+      loadSpectrumFromFilePath(argv.p, argv.s).then((result) => {
+        console.log(JSON.stringify(result))
+      })
+    }
+  },
+};
 
-  return snapshots;
-}
-
-async function loadSpectrumFromURL(url, enableSnapshot = false) {
-  const { pathname: relativePath, origin: baseURL } = new URL(url);
-  const source = {
-    entries: [
-      {
-        relativePath,
-      }
-    ],
-    baseURL
-  };
-  const fileCollection = await fileUtils.fileCollectionFromWebSource(source, {});
-
-  const {
-    nmriumState: { data, version },
-  } = await loader.read(fileCollection);
-
-  let images = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version });
-  }
-
-
-  return { data, version, images };
-}
-
-
-async function loadSpectrumFromFilePath(path, enableSnapshot = false) {
-  const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
-
-  const fileCollection = await fileUtils.fileCollectionFromPath(dirPath, {});
-
-  const {
-    nmriumState: { data, version }
-  } = await loader.read(fileCollection);
-
-  let images = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version });
-  }
-
-
-  return { data, version, images };
-}
-
-
-const parameters = options.argv;
-
-if (parameters.u && parameters.p) {
-  options.showHelp();
-} else {
-
-  if (parameters.u) {
-    loadSpectrumFromURL(parameters.u, parameters.s).then((result) => {
-      console.log(JSON.stringify(result))
-    })
-
-  }
-
-  if (parameters.p) {
-    loadSpectrumFromFilePath(parameters.p, parameters.s).then((result) => {
-      console.log(JSON.stringify(result))
-    })
-  }
-
-}
-
+// Set up Yargs with the two commands
+yargs
+  .usage(usageMessage)
+  .command(parseFileCommand)
+  .showHelpOnFail(true)
+  .help()
+  .argv;
 
 
 
