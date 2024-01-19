@@ -1,18 +1,25 @@
-const { join, isAbsolute } = require("path");
-const loader = require("nmr-load-save");
-const fileUtils = require("filelist-utils");
-const playwright = require('playwright');
+import { join, isAbsolute } from "path";
+import { type NmriumState, read } from "nmr-load-save";
+import { fileCollectionFromWebSource, fileCollectionFromPath } from "filelist-utils";
+import playwright from 'playwright';
+
+
+interface Snapshot {
+    image: string,
+    id: string;
+}
 
 
 function generateNMRiumURL() {
-    const baseURL = process.env['BASE_NMRIUM_URL'];
+    const baseURL = process.env['BASE_NMRIUM_URL'] || '';
     const url = new URL(baseURL)
     url.searchParams.append('workspace', "embedded")
     return url.toString()
 }
 
-async function captureSpectraViewAsBase64(nmriumState) {
-    const { data: { spectra }, version } = nmriumState;
+
+async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>) {
+    const { data: { spectra } = { spectra: [] }, version } = nmriumState;
     const browser = await playwright.chromium.launch()
     const context = await browser.newContext(playwright.devices['Desktop Chrome HiDPI'])
     const page = await context.newPage()
@@ -23,7 +30,7 @@ async function captureSpectraViewAsBase64(nmriumState) {
 
     await page.locator('text=Loading').waitFor({ state: 'hidden' });
 
-    let snapshots = []
+    let snapshots: Snapshot[] = []
 
     for (const spectrum of spectra || []) {
         const spectrumObject = {
@@ -35,8 +42,8 @@ async function captureSpectraViewAsBase64(nmriumState) {
         }
 
         // convert typed array to array
-        const stringObject = JSON.stringify(spectrumObject, (key, value) => {
-            return ArrayBuffer.isView(value) ? Array.from(value) : value
+        const stringObject = JSON.stringify(spectrumObject, (key, value: unknown) => {
+            return ArrayBuffer.isView(value) ? Array.from(value as unknown as Iterable<unknown>) : value
         })
 
         // load the spectrum into NMRium using the custom event
@@ -68,7 +75,7 @@ async function captureSpectraViewAsBase64(nmriumState) {
     return snapshots;
 }
 
-async function loadSpectrumFromURL(url, enableSnapshot = false) {
+async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
     const { pathname: relativePath, origin: baseURL } = new URL(url);
     const source = {
         entries: [
@@ -78,13 +85,13 @@ async function loadSpectrumFromURL(url, enableSnapshot = false) {
         ],
         baseURL
     };
-    const fileCollection = await fileUtils.fileCollectionFromWebSource(source, {});
+    const fileCollection = await fileCollectionFromWebSource(source, {});
 
     const {
         nmriumState: { data, version },
-    } = await loader.read(fileCollection);
+    } = await read(fileCollection);
 
-    let images = []
+    let images: Snapshot[] = []
 
     if (enableSnapshot) {
         images = await captureSpectraViewAsBase64({ data, version });
@@ -95,16 +102,16 @@ async function loadSpectrumFromURL(url, enableSnapshot = false) {
 }
 
 
-async function loadSpectrumFromFilePath(path, enableSnapshot = false) {
+async function loadSpectrumFromFilePath(path: string, enableSnapshot = false) {
     const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
-    const fileCollection = await fileUtils.fileCollectionFromPath(dirPath, {});
+    const fileCollection = await fileCollectionFromPath(dirPath, {});
 
     const {
         nmriumState: { data, version }
-    } = await loader.read(fileCollection);
+    } = await read(fileCollection);
 
-    let images = []
+    let images: Snapshot[] = []
 
     if (enableSnapshot) {
         images = await captureSpectraViewAsBase64({ data, version });
@@ -115,7 +122,7 @@ async function loadSpectrumFromFilePath(path, enableSnapshot = false) {
 }
 
 
-module.exports = {
+export {
     loadSpectrumFromFilePath,
     loadSpectrumFromURL
 };
