@@ -18,8 +18,10 @@ RUN npm install
 
 COPY . ./
 
+RUN npm run build
+
 #install the nmr-cli as a global package 
-# for example, nmr-cli -u https://cheminfo.github.io/bruker-data-test/data/zipped/aspirin-1h.zip
+# for example, nmr-cli parse-spectra -u https://cheminfo.github.io/bruker-data-test/data/zipped/aspirin-1h.zip
 RUN npm install . -g
 
 

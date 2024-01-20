@@ -2,20 +2,29 @@
   "name": "test-node",
   "version": "1.0.0",
   "description": "",
-  "main": "bin/index.js",
+  "main": "./build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bin": {
-    "nmr-cli": "./bin/index.js"
+    "nmr-cli": "./build/index.js"
   },
   "dependencies": {
     "filelist-utils": "^1.10.2",
-    "nmr-load-save": "^0.23.11",
+    "nmr-load-save": "^0.24.0",
+    "nmr-processing": "^11.7.0",
     "playwright": "^1.40.1",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/yargs": "^17.0.32",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
