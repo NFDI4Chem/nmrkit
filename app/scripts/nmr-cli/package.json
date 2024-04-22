@@ -18,13 +18,13 @@
     "filelist-utils": "^1.11.0",
     "nmr-load-save": "^0.28.0",
     "nmr-processing": "^12.0.1",
-    "playwright": "^1.42.1",
+    "playwright": "^1.43.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@types/node": "^20.11.28",
+    "@types/node": "^20.12.7",
     "@types/yargs": "^17.0.32",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.5"
   }
 }
