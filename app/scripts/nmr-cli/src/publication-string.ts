@@ -61,7 +61,7 @@ function generateSpectrumFromPublicationString(
 ) {
     const {
         ranges,
-        experiment: { nucleus, solvent },
+        info: { nucleus, solvent = '' },
         parts,
     } = resurrect(publicationString);
     return generateSpectrumFromRanges(
