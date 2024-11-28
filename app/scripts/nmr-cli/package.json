@@ -15,9 +15,9 @@
     "nmr-cli": "./build/index.js"
   },
   "dependencies": {
-    "filelist-utils": "^1.11.0",
-    "nmr-load-save": "^0.33.1",
-    "nmr-processing": "^12.3.2",
+    "filelist-utils": "^1.11.2",
+    "nmr-load-save": "^2.1.0",
+    "nmr-processing": "^14.0.5",
     "playwright": "^1.49.0",
     "yargs": "^17.7.2"
   },
