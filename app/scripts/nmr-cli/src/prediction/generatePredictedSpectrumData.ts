@@ -8,23 +8,21 @@ export interface ShiftsItem {
   spheres: number
 }
 
-interface LorentzianOptions {
+type PeakShape = 'gaussian' | 'lorentzian'
+
+interface PeakShapeOptions {
   x: number
   fwhm: number
 }
 
-function lorentzian2(options: LorentzianOptions) {
-  const { x, fwhm } = options
-  return fwhm ** 2 / (4 * x ** 2 + fwhm ** 2)
-}
-
-interface GenerateSpectrumOptions {
+export interface GenerateSpectrumOptions {
   from?: number
   to?: number
   nbPoints?: number
   lineWidth?: number
   frequency?: number
   tolerance?: number
+  peakShape?: PeakShape
 }
 
 interface GroupItem {
@@ -38,7 +36,37 @@ interface Data1D {
   re: number[]
 }
 
-const getLorentzianFactor = (area = 0.9999) => {
+const GAUSSIAN_EXP_FACTOR = -4 * Math.LN2
+
+function lorentzian(options: PeakShapeOptions) {
+  const { x, fwhm } = options
+  return fwhm ** 2 / (4 * x ** 2 + fwhm ** 2)
+}
+
+function gaussian(options: PeakShapeOptions) {
+  const { x, fwhm } = options
+  return Math.exp(GAUSSIAN_EXP_FACTOR * Math.pow(x / fwhm, 2))
+}
+
+function erfinv(x: number): number {
+  let a = 0.147
+  if (x === 0) return 0
+  let ln1MinusXSqrd = Math.log(1 - x * x)
+  let lnEtcBy2Plus2 = ln1MinusXSqrd / 2 + 2 / (Math.PI * a)
+  let firstSqrt = Math.sqrt(lnEtcBy2Plus2 ** 2 - ln1MinusXSqrd / a)
+  let secondSqrt = Math.sqrt(firstSqrt - lnEtcBy2Plus2)
+  return secondSqrt * (x > 0 ? 1 : -1)
+}
+
+function getGaussianFactor(area = 0.9999) {
+  if (area >= 1) {
+    throw new Error('area should be (0 - 1)')
+  }
+
+  return Math.sqrt(2) * erfinv(area)
+}
+
+function getLorentzianFactor(area = 0.9999) {
   if (area >= 1) {
     throw new Error('area should be (0 - 1)')
   }
@@ -47,6 +75,22 @@ const getLorentzianFactor = (area = 0.9999) => {
   return (
     (quantileFunction(1 - halfResidual) - quantileFunction(halfResidual)) / 2
   )
+}
+
+function peakShapeFunction(options: PeakShapeOptions, shape: PeakShape) {
+  if (shape === 'lorentzian') {
+    return lorentzian(options)
+  }
+
+  return gaussian(options)
+}
+
+function getPeakShapeFactor(area: number, shape: PeakShape) {
+  if (shape === 'lorentzian') {
+    return getLorentzianFactor(area)
+  }
+
+  return getGaussianFactor(area)
 }
 
 function groupEquivalentShifts(shifts: ShiftsItem[], tolerance = 0.001) {
@@ -81,6 +125,7 @@ export function generatePredictedSpectrumData(
     frequency = 400,
     lineWidth = 1,
     tolerance = 0.001,
+    peakShape = 'lorentzian',
   } = options
 
   if (!shifts || shifts.length === 0) return []
@@ -107,24 +152,22 @@ export function generatePredictedSpectrumData(
   const stepSize = (to - from) / (nbPoints - 1)
   const groupedShifts = groupEquivalentShifts(acceptedShifts, tolerance)
 
-  console.log(groupedShifts)
-
-  const limit = (lineWidth * getLorentzianFactor(0.99)) / frequency
-  console.log(limit)
+  const limit = (lineWidth * getPeakShapeFactor(0.99, peakShape)) / frequency
   for (let i = 0; i < nbPoints; i++) {
     const x = from + i * stepSize
     let intensity = 0
     for (const { prediction, count } of groupedShifts) {
       if (Math.abs(x - prediction) <= limit) {
         intensity +=
-          lorentzian2({ x: x - prediction, fwhm: lineWidth / frequency }) *
-          count
+          peakShapeFunction(
+            { x: x - prediction, fwhm: lineWidth / frequency },
+            peakShape
+          ) * count
       }
     }
-    if (intensity > 0) {
-      data.x.push(x)
-      data.re.push(intensity)
-    }
+
+    data.x.push(x)
+    data.re.push(intensity)
   }
 
   return data

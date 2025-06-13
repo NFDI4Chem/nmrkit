@@ -25,9 +25,10 @@ Options for 'parse-spectra' command:
   -p, --path          Directory path
   -s, --capture-snapshot   Capture snapshot
 
-
+ 
 Options for 'predict' command:
-  -n, --nucleus       Predicted nucleus  "1H" or "13C"  (required)
+  -ps,--peakShape     Peak shape algorithm (default: "lorentzian") choices: ["gaussian", "lorentzian"]
+  -n, --nucleus       Predicted nucleus, choices: ["1H","13C"]    (required)
   -i, --id            Input ID (default: 1)
   -t, --type          NMR type (default: "nmr;1H;1d")
   -s, --shifts        Chemical shifts (default: "1")
@@ -35,10 +36,10 @@ Options for 'predict' command:
   -m, --molText       MOL text (required)
       --from          From in (ppm)
       --to            To in (ppm)
-      --nbPoints      Number of points (default: 128)
+      --nbPoints      Number of points (default: 1024)
       --lineWidth     Line width (default: 1)
       --frequency     NMR frequency (MHz) (default: 400)
-      --tolerance     Tolerance (default: 0.001)
+      --tolerance     Tolerance to group peaks with close shift (default: 0.001)
 
 
 
