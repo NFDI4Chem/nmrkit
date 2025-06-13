@@ -15,6 +15,7 @@
     "nmr-cli": "./build/index.js"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "filelist-utils": "^1.11.3",
     "nmr-load-save": "^3.3.0",
     "nmr-processing": "^17.1.3",
