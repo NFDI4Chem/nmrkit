@@ -30,7 +30,7 @@ const predictionOptions: { [key in keyof GenerateSpectrumOptions]: Options } = {
     nbPoints: {
         type: 'number',
         description: 'Number of points',
-        default: 1024,
+        default: 2 ** 18, // 256k points
     },
     lineWidth: {
         type: 'number',
@@ -146,7 +146,7 @@ async function predictNMR(options: PredictionArgs): Promise<void> {
             solvent,
             from,
             to,
-            nbPoints = 1024,
+            nbPoints = 2 ** 18, // 256K
             frequency = 400,
             lineWidth = 1,
             tolerance = 0.001,
