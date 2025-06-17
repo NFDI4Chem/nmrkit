@@ -3,6 +3,7 @@ import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
 import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
 import { parsePredictionCommand } from './prediction/parsePredictionCommand'
+import { hideBin } from 'yargs/helpers';
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -118,7 +119,7 @@ const parsePublicationCommand: CommandModule = {
   },
 }
 
-yargs
+yargs(hideBin(process.argv))
   .usage(usageMessage)
   .command(parseFileCommand)
   .command(parsePublicationCommand)
