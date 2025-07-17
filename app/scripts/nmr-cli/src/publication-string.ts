@@ -1,4 +1,4 @@
-import { resurrect, rangesToXY, type NMRRange } from 'nmr-processing';
+import { resurrect, rangesToXY, type NMRRangeWithIntegration } from 'nmr-processing';
 import { v4 } from '@lukeed/uuid';
 import { CURRENT_EXPORT_VERSION } from 'nmr-load-save';
 import { castToArray } from './utilities/castToArray'
@@ -9,7 +9,7 @@ interface Info {
 }
 
 function generateSpectrumFromRanges(
-    ranges: NMRRange[],
+    ranges: NMRRangeWithIntegration[],
     info: Info,
 ) {
     const { nucleus, solvent, name = null } = info;
