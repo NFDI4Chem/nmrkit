@@ -1,7 +1,7 @@
 # build the image ` docker build --tag nmr-cli  . ` 
 # run the container ` docker run -it nmr-cli bash `
 
-FROM mcr.microsoft.com/playwright:v1.55.0-noble
+FROM mcr.microsoft.com/playwright:v1.56.1-noble
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
