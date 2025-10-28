@@ -3,7 +3,6 @@ import {
   rangesToXY,
   type NMRRangeWithIntegration,
 } from 'nmr-processing'
-import { v4 } from '@lukeed/uuid'
 import { CURRENT_EXPORT_VERSION } from '@zakodium/nmrium-core'
 import { castToArray } from './utilities/castToArray'
 
@@ -41,7 +40,7 @@ function generateSpectrumFromRanges(
     }
 
     const spectrum = {
-      id: v4(),
+      id: crypto.randomUUID(),
       data: { x: castToArray(x), im: undefined, re: castToArray(y) },
       info,
       ranges: {
