@@ -4,7 +4,6 @@ import {
   GenerateSpectrumOptions,
   ShiftsItem,
 } from './generatePredictedSpectrumData'
-import { v4 } from '@lukeed/uuid'
 import { CURRENT_EXPORT_VERSION } from '@zakodium/nmrium-core'
 
 import https from 'https'
@@ -184,7 +183,7 @@ async function predictNMR(options: PredictionArgs): Promise<void> {
     const spectra = []
 
     for (const result of responseResult.result) {
-      const name = v4()
+      const name = crypto.randomUUID()
       const data = generatePredictedSpectrumData(result.shifts, {
         from,
         to,
@@ -209,7 +208,7 @@ async function predictNMR(options: PredictionArgs): Promise<void> {
       }
 
       spectra.push({
-        id: v4(),
+        id: crypto.randomUUID(),
         data,
         info,
       })

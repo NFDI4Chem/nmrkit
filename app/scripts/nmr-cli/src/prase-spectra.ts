@@ -1,11 +1,8 @@
 import { join, isAbsolute } from 'path'
 import { type NmriumState } from '@zakodium/nmrium-core'
 import init from '@zakodium/nmrium-core-plugins'
-import {
-  fileCollectionFromWebSource,
-  fileCollectionFromPath,
-} from 'filelist-utils'
 import playwright from 'playwright'
+import { FileCollection } from 'file-collection'
 
 interface Snapshot {
   image: string
@@ -94,11 +91,11 @@ async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
     ],
     baseURL,
   }
-  const fileCollection = await fileCollectionFromWebSource(source, {})
 
+  const [nmriumState] = await core.readFromWebSource(source);
   const {
-    nmriumState: { data, version },
-  } = await core.read(fileCollection)
+    data, version
+  } = nmriumState;
 
   let images: Snapshot[] = []
 
@@ -112,7 +109,9 @@ async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
 async function loadSpectrumFromFilePath(path: string, enableSnapshot = false) {
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
-  const fileCollection = await fileCollectionFromPath(dirPath, {})
+  const fileCollection = await FileCollection.fromPath(dirPath, {
+    unzip: { zipExtensions: ['zip', 'nmredata'] },
+  })
 
   const {
     nmriumState: { data, version },
