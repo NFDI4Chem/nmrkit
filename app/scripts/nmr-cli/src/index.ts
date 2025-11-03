@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
-import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './prase-spectra'
+import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
 import { parsePredictionCommand } from './prediction/parsePredictionCommand'
 import { hideBin } from 'yargs/helpers'
@@ -14,18 +14,14 @@ Commands:
   predict                      Predict spectrum from Mol 
 
 Options for 'parse-spectra' command:
-  -u, --url           File URL
-  -p, --path          Directory path
-  -s, --capture-snapshot   Capture snapshot
+  -u, --url                File URL  
+  -dir, --dir-path         Directory path  
+  -s, --capture-snapshot   Capture snapshot  
+  -p, --auto-processing    Automatic processing of spectrum (FID → FT spectra).
+  -d, --auto-detection     Enable ranges and zones automatic detection.
 
 Arguments for 'parse-publication-string' command:
   publicationString   Publication string
-
-Options for 'parse-spectra' command:
-  -u, --url           File URL
-  -p, --path          Directory path
-  -s, --capture-snapshot   Capture snapshot
-
  
 Options for 'predict' command:
   -ps,--peakShape     Peak shape algorithm (default: "lorentzian") choices: ["gaussian", "lorentzian"]
@@ -46,16 +42,43 @@ Options for 'predict' command:
 
 Examples:
   nmr-cli  parse-spectra -u file-url -s                                   // Process spectra files from a URL and capture an image for the spectra
-  nmr-cli  parse-spectra -p directory-path -s                             // process a spectra files from a directory and capture an image for the spectra
+  nmr-cli  parse-spectra -dir directory-path -s                             // process a spectra files from a directory and capture an image for the spectra
   nmr-cli  parse-spectra -u file-url                                      // Process spectra files from a URL 
-  nmr-cli  parse-spectra -p directory-path                                // Process spectra files from a directory 
+  nmr-cli  parse-spectra -dir directory-path                                // Process spectra files from a directory 
   nmr-cli  parse-publication-string "your publication string"
 `
 
-interface FileOptionsArgs {
-  u?: string
-  p?: string
-  s?: boolean
+export interface FileOptionsArgs {
+  /**  
+   * -u, --url  
+   * File URL to load remote spectra or data.
+   */
+  u?: string;
+
+  /**  
+   * -dir, --dir-path  
+   * Local directory path for file input or output.
+   */
+  dir?: string;
+
+  /**  
+   * -s, --capture-snapshot  
+   * Capture a visual snapshot of the current state or spectrum.
+   */
+  s?: boolean;
+
+  /**  
+   * -p, --auto-processing  
+   * Automatically process spectrum from FID to FT spectra.  
+   * Mandatory when automatic detection (`--auto-detection`) is enabled.
+   */
+  p?: boolean;
+
+  /**  
+   * -d, --auto-detection  
+   * Perform automatic ranges and zones detection.
+   */
+  d?: boolean;
 }
 
 // Define options for parsing a spectra file
@@ -66,8 +89,8 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
     type: 'string',
     nargs: 1,
   },
-  p: {
-    alias: 'path',
+  dir: {
+    alias: 'dir-path',
     describe: 'Directory path',
     type: 'string',
     nargs: 1,
@@ -75,6 +98,16 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
   s: {
     alias: 'capture-snapshot',
     describe: 'Capture snapshot',
+    type: 'boolean',
+  },
+  p: {
+    alias: 'auto-processing',
+    describe: 'Auto processing',
+    type: 'boolean',
+  },
+  d: {
+    alias: 'auto-detection',
+    describe: 'Ranges and zones auto detection',
     type: 'boolean',
   },
 } as const
@@ -85,21 +118,25 @@ const parseFileCommand: CommandModule<{}, FileOptionsArgs> = {
   builder: yargs => {
     return yargs
       .options(fileOptions)
-      .conflicts('u', 'p') as Argv<FileOptionsArgs>
+      .conflicts('u', 'dir') as Argv<FileOptionsArgs>
   },
   handler: argv => {
+
+    const { u, dir } = argv;
     // Handle parsing the spectra file logic based on argv options
-    if (argv?.u) {
-      loadSpectrumFromURL(argv.u, argv.s).then(result => {
+    if (u) {
+      loadSpectrumFromURL({ u, ...argv }).then(result => {
         console.log(JSON.stringify(result))
       })
     }
 
-    if (argv?.p) {
-      loadSpectrumFromFilePath(argv.p, argv.s).then(result => {
+
+    if (dir) {
+      loadSpectrumFromFilePath({ dir, ...argv }).then(result => {
         console.log(JSON.stringify(result))
       })
     }
+
   },
 }
 
