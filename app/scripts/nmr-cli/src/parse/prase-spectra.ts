@@ -1,8 +1,23 @@
 import { join, isAbsolute } from 'path'
-import { type NmriumState } from '@zakodium/nmrium-core'
+import { NmriumData, ParsingOptions, type NmriumState } from '@zakodium/nmrium-core'
 import init from '@zakodium/nmrium-core-plugins'
 import playwright from 'playwright'
 import { FileCollection } from 'file-collection'
+import { FileOptionsArgs } from '..'
+import { isSpectrum2D } from './data/data2d/isSpectrum2D'
+import { initiateDatum2D } from './data/data2d/initiateDatum2D'
+import { initiateDatum1D } from './data/data1D/initiateDatum1D'
+import { detectZones } from './data/data2d/detectZones'
+import { detectRanges } from './data/data1D/detectRanges'
+import { Filters1DManager, Filters2DManager } from 'nmr-processing'
+
+type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+
+const parsingOptions: ParsingOptions = {
+  onLoadProcessing: { autoProcessing: true },
+  sourceSelector: { general: { dataSelection: 'preferFT' } },
+  experimentalFeatures: true
+};
 
 interface Snapshot {
   image: string
@@ -79,9 +94,39 @@ async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>) {
   await browser.close()
 
   return snapshots
+
 }
 
-async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
+interface ProcessSpectraOptions {
+  autoDetection: boolean; autoProcessing: boolean;
+}
+
+function processSpectra(data: NmriumData, options: ProcessSpectraOptions) {
+
+  const { autoDetection = false, autoProcessing = false } = options
+
+  for (let index = 0; index < data.spectra.length; index++) {
+    const inputSpectrum = data.spectra[index]
+    const is2D = isSpectrum2D(inputSpectrum);
+    const spectrum = is2D ? initiateDatum2D(inputSpectrum) : initiateDatum1D(inputSpectrum);
+
+    if (autoProcessing) {
+      isSpectrum2D(spectrum) ? Filters2DManager.reapplyFilters(spectrum) : Filters1DManager.reapplyFilters(spectrum)
+    }
+
+    if (autoDetection && spectrum.info.isFt) {
+      isSpectrum2D(spectrum) ? detectZones(spectrum) : detectRanges(spectrum);
+    }
+
+    data.spectra[index] = spectrum;
+  }
+
+
+}
+
+async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
+  const { u: url, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+
   const { pathname: relativePath, origin: baseURL } = new URL(url)
   const source = {
     entries: [
@@ -92,10 +137,15 @@ async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
     baseURL,
   }
 
-  const [nmriumState] = await core.readFromWebSource(source);
+  const [nmriumState] = await core.readFromWebSource(source, parsingOptions);
   const {
     data, version
   } = nmriumState;
+
+
+  if (data) {
+    processSpectra(data, { autoDetection, autoProcessing });
+  }
 
   let images: Snapshot[] = []
 
@@ -106,7 +156,9 @@ async function loadSpectrumFromURL(url: string, enableSnapshot = false) {
   return { data, version, images }
 }
 
-async function loadSpectrumFromFilePath(path: string, enableSnapshot = false) {
+async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>) {
+  const { dir: path, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
   const fileCollection = await FileCollection.fromPath(dirPath, {
@@ -115,7 +167,12 @@ async function loadSpectrumFromFilePath(path: string, enableSnapshot = false) {
 
   const {
     nmriumState: { data, version },
-  } = await core.read(fileCollection)
+  } = await core.read(fileCollection, parsingOptions)
+
+
+  if (data) {
+    processSpectra(data, { autoDetection, autoProcessing })
+  }
 
   let images: Snapshot[] = []
 

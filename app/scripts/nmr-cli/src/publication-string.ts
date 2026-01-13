@@ -1,10 +1,10 @@
 import {
   resurrect,
   rangesToXY,
-  type NMRRangeWithIntegration,
 } from 'nmr-processing'
 import { CURRENT_EXPORT_VERSION } from '@zakodium/nmrium-core'
 import { castToArray } from './utilities/castToArray'
+import { NMRRange } from '@zakodium/nmr-types'
 
 interface Info {
   nucleus: string
@@ -13,7 +13,7 @@ interface Info {
 }
 
 function generateSpectrumFromRanges(
-  ranges: NMRRangeWithIntegration[],
+  ranges: NMRRange[],
   info: Info
 ) {
   const { nucleus, solvent, name = null } = info
