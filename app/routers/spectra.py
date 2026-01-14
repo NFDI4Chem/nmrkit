@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, UploadFile, File, Query
+from fastapi import APIRouter, HTTPException, status, UploadFile, File, Form
 from app.schemas import HealthCheck
+from pydantic import BaseModel, HttpUrl, Field
 import subprocess
 import tempfile
 import os
 import json
+from pathlib import Path
 
 router = APIRouter(
     prefix="/spectra",
@@ -14,6 +16,23 @@ router = APIRouter(
 
 # Container name for nmr-cli (from docker-compose.yml)
 NMR_CLI_CONTAINER = "nmr-converter"
+
+
+class UrlParseRequest(BaseModel):
+    """Request model for parsing spectra from URL"""
+    url: HttpUrl = Field(..., description="URL of the spectra file")
+    capture_snapshot: bool = Field(
+        False,
+        description="Generate an image snapshot of the spectra"
+    )
+    auto_processing: bool = Field(
+        False,
+        description="Enable automatic processing of spectrum (FID → FT spectra)"
+    )
+    auto_detection: bool = Field(
+        False,
+        description="Enable ranges and zones automatic detection"
+    )
 
 
 @router.get("/", include_in_schema=False)
@@ -39,25 +58,14 @@ def get_health() -> HealthCheck:
     return HealthCheck(status="OK")
 
 
-CAPTURE_SNAPSHOT_QUERY = Query(
-    False, alias="Capture snapshot", description="Generate a image snapshot of the spectra")
-AUTO_PROCESSING_QUERY = Query(
-    False, alias="Automatic processing",
-    description="Enable automatic processing of spectrum (FID → FT spectra)"
-)
-AUTO_DETECTION_QUERY = Query(
-    False, alias="Automatic detection",
-    description="Enable ranges and zones automatic detection"
-)
-
-
 def run_command(
-    file_path: Optional[str] = None,
-    url: Optional[str] = None,
+    file_path: str = None,
+    url: str = None,
     capture_snapshot: bool = False,
     auto_processing: bool = False,
     auto_detection: bool = False,
 ) -> dict:
+    """Execute nmr-cli command in Docker container"""
 
     cmd = ["nmr-cli", "parse-spectra"]
 
@@ -82,23 +90,31 @@ def run_command(
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(
-            status_code=408, detail="Processing timeout exceeded")
+            status_code=408,
+            detail="Processing timeout exceeded"
+        )
     except FileNotFoundError:
         raise HTTPException(
-            status_code=500, detail="Docker not found or nmr-converter container not running.")
+            status_code=500,
+            detail="Docker not found or nmr-converter container not running."
+        )
 
     if result.returncode != 0:
         error_msg = result.stderr.decode(
             "utf-8") if result.stderr else "Unknown error"
         raise HTTPException(
-            status_code=422, detail=f"NMR CLI error: {error_msg}")
+            status_code=422,
+            detail=f"NMR CLI error: {error_msg}"
+        )
 
     # Parse output
     try:
         return json.loads(result.stdout.decode("utf-8"))
     except json.JSONDecodeError as e:
         raise HTTPException(
-            status_code=500, detail=f"Invalid JSON from NMR CLI: {e}")
+            status_code=500,
+            detail=f"Invalid JSON from NMR CLI: {e}"
+        )
 
 
 def copy_file_to_container(local_path: str, container_path: str) -> None:
@@ -114,7 +130,9 @@ def copy_file_to_container(local_path: str, container_path: str) -> None:
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.decode("utf-8") if e.stderr else "Unknown error"
         raise HTTPException(
-            status_code=500, detail=f"Failed to copy file to container: {error_msg}")
+            status_code=500,
+            detail=f"Failed to copy file to container: {error_msg}"
+        )
 
 
 def remove_file_from_container(container_path: str) -> None:
@@ -129,7 +147,6 @@ def remove_file_from_container(container_path: str) -> None:
         pass
 
 
-#  Parse from File Upload
 @router.post(
     "/parse/file",
     tags=["spectra"],
@@ -138,16 +155,26 @@ def remove_file_from_container(container_path: str) -> None:
     status_code=status.HTTP_200_OK,
 )
 async def parse_spectra_from_file(
-    file: UploadFile = File(...,
-                            description="Upload a spectra file"),
-    capture_snapshot: bool = CAPTURE_SNAPSHOT_QUERY,
-    auto_processing: bool = AUTO_PROCESSING_QUERY,
-    auto_detection: bool = AUTO_DETECTION_QUERY,
+    file: UploadFile = File(..., description="Upload a spectra file"),
+    capture_snapshot: bool = Form(
+        False,
+        description="Generate an image snapshot of the spectra"
+    ),
+    auto_processing: bool = Form(
+        False,
+        description="Enable automatic processing of spectrum (FID → FT spectra)"
+    ),
+    auto_detection: bool = Form(
+        False,
+        description="Enable ranges and zones automatic detection"
+    ),
 ):
     """
     ## Parse spectra from uploaded file
 
-    **Processing Options:**
+    Upload a spectra file along with processing options using multipart/form-data.
+
+    Processing Options:
     - `capture_snapshot (s)` : Capture snapshot of the spectra
     - `auto_processing  (p)` : Enable automatic processing of spectrum (FID → FT spectra)
     - `auto_detection   (d)` : Enable ranges and zones automatic detection
@@ -186,7 +213,9 @@ async def parse_spectra_from_file(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=422, detail=f"Error parsing the spectra file: {e}")
+            status_code=422,
+            detail=f"Error parsing the spectra file: {e}"
+        )
     finally:
         if local_tmp_path and os.path.exists(local_tmp_path):
             os.unlink(local_tmp_path)
@@ -195,7 +224,6 @@ async def parse_spectra_from_file(
         await file.close()
 
 
-#  Parse from URL
 @router.post(
     "/parse/url",
     tags=["spectra"],
@@ -203,16 +231,13 @@ async def parse_spectra_from_file(
     response_description="Spectra data in JSON format",
     status_code=status.HTTP_200_OK,
 )
-async def parse_spectra_from_url(
-    url: str = Query(..., alias="URL"),
-    capture_snapshot: bool = CAPTURE_SNAPSHOT_QUERY,
-    auto_processing: bool = AUTO_PROCESSING_QUERY,
-    auto_detection: bool = AUTO_DETECTION_QUERY,
-):
+async def parse_spectra_from_url(request: UrlParseRequest):
     """
-    ## Parse spectra from URL
+    Parse spectra from URL
 
-    **Processing Options:**
+    Provide a URL to a spectra file along with processing options using JSON body.
+
+    Processing Options:
     - `capture_snapshot (s)` : Capture snapshot of the spectra
     - `auto_processing  (p)` : Enable automatic processing of spectrum (FID → FT spectra)
     - `auto_detection   (d)` : Enable ranges and zones automatic detection
@@ -220,25 +245,18 @@ async def parse_spectra_from_url(
     Returns:
         Spectra data in JSON format
     """
-    if not url or not url.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="URL is required",
-            headers={"X-Error": "No URL provided"},
-        )
-
     try:
-        output = run_command(
-            url=url.strip(),
-            capture_snapshot=capture_snapshot,
-            auto_processing=auto_processing,
-            auto_detection=auto_detection,
+        return run_command(
+            url=str(request.url),
+            capture_snapshot=request.capture_snapshot,
+            auto_processing=request.auto_processing,
+            auto_detection=request.auto_detection,
         )
-
-        return output
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=422, detail=f"Error parsing spectra from URL: {e}")
+            status_code=422,
+            detail=f"Error parsing spectra from URL: {e}"
+        )
