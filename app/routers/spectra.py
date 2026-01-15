@@ -1,6 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, UploadFile
+from fastapi import APIRouter, HTTPException, status, UploadFile, File, Form
 from app.schemas import HealthCheck
+from pydantic import BaseModel, HttpUrl, Field
 import subprocess
+import tempfile
+import os
+import json
+from pathlib import Path
 
 router = APIRouter(
     prefix="/spectra",
@@ -8,6 +13,26 @@ router = APIRouter(
     dependencies=[],
     responses={404: {"description": "Not Found"}},
 )
+
+# Container name for nmr-cli (from docker-compose.yml)
+NMR_CLI_CONTAINER = "nmr-converter"
+
+
+class UrlParseRequest(BaseModel):
+    """Request model for parsing spectra from URL"""
+    url: HttpUrl = Field(..., description="URL of the spectra file")
+    capture_snapshot: bool = Field(
+        False,
+        description="Generate an image snapshot of the spectra"
+    )
+    auto_processing: bool = Field(
+        False,
+        description="Enable automatic processing of spectrum (FID → FT spectra)"
+    )
+    auto_detection: bool = Field(
+        False,
+        description="Enable ranges and zones automatic detection"
+    )
 
 
 @router.get("/", include_in_schema=False)
@@ -33,42 +58,205 @@ def get_health() -> HealthCheck:
     return HealthCheck(status="OK")
 
 
+def run_command(
+    file_path: str = None,
+    url: str = None,
+    capture_snapshot: bool = False,
+    auto_processing: bool = False,
+    auto_detection: bool = False,
+) -> dict:
+    """Execute nmr-cli command in Docker container"""
+
+    cmd = ["nmr-cli", "parse-spectra"]
+
+    if url:
+        cmd.extend(["-u", url])
+    elif file_path:
+        cmd.extend(["-p", file_path])
+
+    if capture_snapshot:
+        cmd.append("-s")
+    if auto_processing:
+        cmd.append("-p")
+    if auto_detection:
+        cmd.append("-d")
+
+    try:
+        result = subprocess.run(
+            ["docker", "exec", NMR_CLI_CONTAINER] + cmd,
+            capture_output=True,
+            text=False,
+            timeout=120
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=408,
+            detail="Processing timeout exceeded"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="Docker not found or nmr-converter container not running."
+        )
+
+    if result.returncode != 0:
+        error_msg = result.stderr.decode(
+            "utf-8") if result.stderr else "Unknown error"
+        raise HTTPException(
+            status_code=422,
+            detail=f"NMR CLI error: {error_msg}"
+        )
+
+    # Parse output
+    try:
+        return json.loads(result.stdout.decode("utf-8"))
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid JSON from NMR CLI: {e}"
+        )
+
+
+def copy_file_to_container(local_path: str, container_path: str) -> None:
+    """Copy a file to the nmr-converter container."""
+    try:
+        subprocess.run(
+            ["docker", "cp", local_path,
+                f"{NMR_CLI_CONTAINER}:{container_path}"],
+            check=True,
+            capture_output=True,
+            timeout=30
+        )
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.decode("utf-8") if e.stderr else "Unknown error"
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to copy file to container: {error_msg}"
+        )
+
+
+def remove_file_from_container(container_path: str) -> None:
+    """Remove a file from the nmr-converter container."""
+    try:
+        subprocess.run(
+            ["docker", "exec", NMR_CLI_CONTAINER, "rm", "-f", container_path],
+            capture_output=True,
+            timeout=10
+        )
+    except Exception:
+        pass
+
+
 @router.post(
-    "/parse",
+    "/parse/file",
     tags=["spectra"],
-    summary="Parse the input spectra format and extract metadata",
-    response_description="",
+    summary="Parse spectra from uploaded file",
+    response_description="Spectra data in JSON format",
     status_code=status.HTTP_200_OK,
 )
-async def parse_spectra(file: UploadFile):
+async def parse_spectra_from_file(
+    file: UploadFile = File(..., description="Upload a spectra file"),
+    capture_snapshot: bool = Form(
+        False,
+        description="Generate an image snapshot of the spectra"
+    ),
+    auto_processing: bool = Form(
+        False,
+        description="Enable automatic processing of spectrum (FID → FT spectra)"
+    ),
+    auto_detection: bool = Form(
+        False,
+        description="Enable ranges and zones automatic detection"
+    ),
+):
     """
-    ## Parse the spectra file and extract meta-data
-    Endpoint uses NMR-load-save to read the input spectra file (.jdx,.nmredata,.dx) and extracts metadata
+    ## Parse spectra from uploaded file
+
+    Upload a spectra file along with processing options using multipart/form-data.
+
+    Processing Options:
+    - `capture_snapshot (s)` : Capture snapshot of the spectra
+    - `auto_processing  (p)` : Enable automatic processing of spectrum (FID → FT spectra)
+    - `auto_detection   (d)` : Enable ranges and zones automatic detection
 
     Returns:
-        data: spectra data in JSON format
+        Spectra data in JSON format
     """
+
+    local_tmp_path = None
+    container_tmp_path = None
+
     try:
-        contents = file.file.read()
-        file_path = "/tmp/" + file.filename
-        with open(file_path, "wb") as f:
-            f.write(contents)
-        p = subprocess.Popen(
-            "npx nmr-cli -p " + file_path, stdout=subprocess.PIPE, shell=True
+        contents = await file.read()
+
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=Path(file.filename).suffix
+        ) as tmp_file:
+            tmp_file.write(contents)
+            local_tmp_path = tmp_file.name
+
+        container_tmp_path = f"/tmp/{Path(local_tmp_path).name}"
+
+        # Copy file to nmr-converter container
+        copy_file_to_container(local_tmp_path, container_tmp_path)
+
+        # Run nmr-cli and get JSON output
+        return run_command(
+            file_path=container_tmp_path,
+            capture_snapshot=capture_snapshot,
+            auto_processing=auto_processing,
+            auto_detection=auto_detection,
         )
-        (output, err) = p.communicate()
-        p_status = p.wait()
-        return output
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail="Error parsing the structure "
-            + e.message
-            + ". Error: "
-            + err
-            + ". Status:"
-            + p_status,
-            headers={"X-Error": "RDKit molecule input parse error"},
+            detail=f"Error parsing the spectra file: {e}"
         )
     finally:
-        file.file.close()
+        if local_tmp_path and os.path.exists(local_tmp_path):
+            os.unlink(local_tmp_path)
+        if container_tmp_path:
+            remove_file_from_container(container_tmp_path)
+        await file.close()
+
+
+@router.post(
+    "/parse/url",
+    tags=["spectra"],
+    summary="Parse spectra from URL",
+    response_description="Spectra data in JSON format",
+    status_code=status.HTTP_200_OK,
+)
+async def parse_spectra_from_url(request: UrlParseRequest):
+    """
+    Parse spectra from URL
+
+    Provide a URL to a spectra file along with processing options using JSON body.
+
+    Processing Options:
+    - `capture_snapshot (s)` : Capture snapshot of the spectra
+    - `auto_processing  (p)` : Enable automatic processing of spectrum (FID → FT spectra)
+    - `auto_detection   (d)` : Enable ranges and zones automatic detection
+
+    Returns:
+        Spectra data in JSON format
+    """
+    try:
+        return run_command(
+            url=str(request.url),
+            capture_snapshot=request.capture_snapshot,
+            auto_processing=request.auto_processing,
+            auto_detection=request.auto_detection,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Error parsing spectra from URL: {e}"
+        )
