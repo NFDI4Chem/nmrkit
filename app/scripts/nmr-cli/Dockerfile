@@ -13,7 +13,6 @@ ENV BASE_NMRIUM_URL=https://nmriumdev.nmrxiv.org/
 ENV NMR_PREDICTION_URL=https://nmrshiftdb.nmr.uni-koeln.de/NmrshiftdbServlet/nmrshiftdbaction/quickcheck
 
 COPY package.json ./
-COPY package-lock.json ./
 
 RUN npm install
 

@@ -15,8 +15,8 @@ type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
 const parsingOptions: ParsingOptions = {
   onLoadProcessing: { autoProcessing: true },
-  sourceSelector: { general: { dataSelection: 'preferFT' } },
-  experimentalFeatures: true
+  selector: { general: { dataSelection: 'preferFT' } },
+  experimentalFeatures: true,
 };
 
 interface Snapshot {
