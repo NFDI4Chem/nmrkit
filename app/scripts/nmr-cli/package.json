@@ -15,11 +15,11 @@
     "nmr-cli": "./build/index.js"
   },
   "dependencies": {
-    "@zakodium/nmr-types": "^0.4.0",
-    "@zakodium/nmrium-core": "^0.4.2",
-    "@zakodium/nmrium-core-plugins": "^0.5.3",
+    "@zakodium/nmr-types": "^0.5.0",
+    "@zakodium/nmrium-core": "^0.5.6",
+    "@zakodium/nmrium-core-plugins": "^0.6.25",
     "axios": "^1.13.2",
-    "file-collection": "^5.4.0",
+    "file-collection": "^6.5.0",
     "lodash.merge": "^4.6.2",
     "mf-parser": "^3.6.0",
     "ml-spectra-processing": "^14.19.0",
