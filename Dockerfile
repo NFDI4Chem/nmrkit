@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3 AS nmrkit-ms
+FROM continuumio/miniconda3:24.1.2-0 AS nmrkit-ms
 
 ENV PYTHON_VERSION=3.10
 ENV OPENBABEL_VERSION=v3.1
@@ -8,10 +8,12 @@ ENV RELEASE_VERSION=${RELEASE_VERSION}
 
 # Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    apt-get update -y && \
-    apt-get install -y openjdk-11-jre && \
-    apt-get install -y curl && \
+    apt-get install -y --no-install-recommends \
+    software-properties-common \
+    openjdk-17-jre \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
     conda update -n base -c defaults conda
 
 RUN apt-get update && apt-get -y install docker.io
@@ -23,7 +25,7 @@ RUN pip3 install rdkit
 
 RUN python3 -m pip install -U pip
 
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
 RUN export JAVA_HOME
 
 RUN git clone "https://github.com/rinikerlab/lightweight-registration.git" lwreg
