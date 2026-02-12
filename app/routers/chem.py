@@ -99,10 +99,11 @@ async def label_atoms(data: Annotated[str, Body(embed=False, media_type="text/pl
         url = "http://alatis.nmrfam.wisc.edu/upload"
         payload = {"input_text": data, "format": "format_", "response_type": "json"}
         response = requests.request("POST", url, data=payload)
+        response.raise_for_status()  # Raise an error for bad status codes
         return response.json()
     except Exception as e:
         raise HTTPException(
             status_code=422,
-            detail="Error parsing the structure " + e.message,
+            detail=f"Error parsing the structure: {str(e)}",
             headers={"X-Error": "RDKit molecule input parse error"},
         )
