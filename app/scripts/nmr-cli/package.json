@@ -15,22 +15,22 @@
     "nmr-cli": "./build/index.js"
   },
   "dependencies": {
-    "@zakodium/nmr-types": "^0.4.0",
-    "@zakodium/nmrium-core": "^0.4.2",
-    "@zakodium/nmrium-core-plugins": "^0.5.3",
-    "axios": "^1.13.0",
-    "file-collection": "^5.4.0",
+    "@zakodium/nmr-types": "^0.5.0",
+    "@zakodium/nmrium-core": "^0.5.6",
+    "@zakodium/nmrium-core-plugins": "^0.6.25",
+    "axios": "^1.13.2",
+    "file-collection": "^6.5.0",
     "lodash.merge": "^4.6.2",
     "mf-parser": "^3.6.0",
-    "ml-spectra-processing": "^14.18.0",
-    "nmr-processing": "^20.1.0",
-    "playwright": "^1.56.1",
+    "ml-spectra-processing": "^14.19.0",
+    "nmr-processing": "^22.1.0",
+    "playwright": "1.56.1",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.9",
-    "@types/node": "^24.9.1",
-    "@types/yargs": "^17.0.34",
+    "@types/node": "^25.0.8",
+    "@types/yargs": "^17.0.35",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
