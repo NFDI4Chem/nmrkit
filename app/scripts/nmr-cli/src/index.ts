@@ -2,8 +2,8 @@
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
 import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
-import { parsePredictionCommand } from './prediction/parsePredictionCommand'
 import { hideBin } from 'yargs/helpers'
+import { parsePredictionCommand } from './prediction'
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -24,19 +24,40 @@ Arguments for 'parse-publication-string' command:
   publicationString   Publication string
  
 Options for 'predict' command:
-  -ps,--peakShape     Peak shape algorithm (default: "lorentzian") choices: ["gaussian", "lorentzian"]
-  -n, --nucleus       Predicted nucleus, choices: ["1H","13C"]    (required)
+
+Common options:
+  -e, --engine        Prediction engine (required)                choices: ["nmrdb.org", "nmrshift"]
+      --spectra       Spectra types to predict (required)         choices: ["proton", "carbon", "cosy", "hsqc", "hmbc"]
+  -s, --structure     MOL file content (structure) (required)
+
+nmrdb.org engine options:
+      --name          Compound name (default: "")
+      --frequency     NMR frequency (MHz) (default: 400)
+      --protonFrom    Proton (1H) from in ppm (default: -1)
+      --protonTo      Proton (1H) to in ppm (default: 12)
+      --carbonFrom    Carbon (13C) from in ppm (default: -5)
+      --carbonTo      Carbon (13C) to in ppm (default: 220)
+      --nbPoints1d    1D number of points (default: 131072)
+      --lineWidth     1D line width (default: 1)
+      --nbPoints2dX   2D spectrum X-axis points (default: 1024)
+      --nbPoints2dY   2D spectrum Y-axis points (default: 1024)
+      --autoExtendRange  Auto extend range (default: true)
+
+nmrshift engine options:
   -i, --id            Input ID (default: 1)
-  -t, --type          NMR type (default: "nmr;1H;1d")
-  -s, --shifts        Chemical shifts (default: "1")
+      --shifts        Chemical shifts (default: "1")
       --solvent       NMR solvent (default: "Dimethylsulphoxide-D6 (DMSO-D6, C2D6SO)")
-  -m, --molText       MOL text (required)
-      --from          From in (ppm)
-      --to            To in (ppm)
+                      choices: ["Any", "Chloroform-D1 (CDCl3)", "Dimethylsulphoxide-D6 (DMSO-D6, C2D6SO)",
+                                "Methanol-D4 (CD3OD)", "Deuteriumoxide (D2O)", "Acetone-D6 ((CD3)2CO)",
+                                "TETRACHLORO-METHANE (CCl4)", "Pyridin-D5 (C5D5N)", "Benzene-D6 (C6D6)",
+                                "neat", "Tetrahydrofuran-D8 (THF-D8, C4D4O)"]
+      --from          From in (ppm) for spectrum generation
+      --to            To in (ppm) for spectrum generation
       --nbPoints      Number of points (default: 1024)
       --lineWidth     Line width (default: 1)
       --frequency     NMR frequency (MHz) (default: 400)
       --tolerance     Tolerance to group peaks with close shift (default: 0.001)
+  -ps,--peakShape     Peak shape algorithm (default: "lorentzian") choices: ["gaussian", "lorentzian"]
 
 
 
