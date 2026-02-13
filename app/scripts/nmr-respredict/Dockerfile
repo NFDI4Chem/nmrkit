@@ -1,12 +1,14 @@
-FROM continuumio/miniconda3 AS nmr-respredict-ms
+FROM continuumio/miniconda3:24.1.2-0 AS nmr-respredict-ms
 
 ENV PYTHON_VERSION=3.10
 
 # Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    apt-get update -y && \
-    apt-get install -y curl && \
+    apt-get install -y --no-install-recommends \
+    software-properties-common \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
     conda update -n base -c defaults conda
 
 RUN conda install -c conda-forge python>=PYTHON_VERSION

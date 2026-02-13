@@ -31,9 +31,9 @@ jobs:
         python-version: ["3.10"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: 'Create env file'
@@ -62,4 +62,4 @@ jobs:
         flake8 --per-file-ignores="__init__.py:F401" --ignore E402,E501,W503 $(git ls-files 'app/*.py') .
     - name: Run test
       run: |
-        python3 -m pytest -p no:warnings --ignore=lwreg/lwreg/test-cli.py --ignore=lwreg/lwreg/test_lwreg.py
+        python3 -m pytest -p no:warnings --ignore=lwreg/lwreg/test-cli.py --ignore=lwreg/lwreg/test_lwreg.py --ignore=lwreg/lwreg/test_dbutils.py

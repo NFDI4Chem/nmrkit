@@ -32,6 +32,21 @@ services:
     env_file:
       - ./.env
 
+  nmr-load-save:
+    image: nfdi4chem/nmr-cli:dev-latest
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
+    container_name: nmr-converter
+  nmr-respredict:
+    image: nfdi4chem/nmr-respredict:dev-latest
+    entrypoint: /bin/sh
+    stdin_open: true
+    tty: true
+    container_name: nmr-respredict
+    volumes:
+      - shared-data:/shared
+
   prometheus:
     image: prom/prometheus
     container_name: nmrkit_prometheus
