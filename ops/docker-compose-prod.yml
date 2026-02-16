@@ -13,6 +13,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   nmrkit-api:
+    container_name: nmrkit-api
     image: nfdi4chem/nmrkit:latest
     pull_policy: always
     labels:
@@ -38,14 +39,16 @@ services:
       start_period: 60s
     env_file:
       - ../.env
-  nmr-load-save:
+  nmr-converter:
     #build: ./app/scripts/nmr-cli
+    container_name: nmr-converter
     image: nfdi4chem/nmr-cli:latest
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
   nmr-respredict:
     #build: ./app/scripts/nmr-respredict
+    container_name: nmrkit-respredict
     image: nfdi4chem/nmr-respredict:latest
     entrypoint: /bin/sh
     stdin_open: true
