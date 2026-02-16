@@ -6,11 +6,13 @@
     NMRKIT_IMAGE="nfdi4chem/nmrkit:dev-latest"
     NMR_CLI_IMAGE="nfdi4chem/nmr-cli:dev-latest"
     LOG_FILE="/var/log/nmrkit-deploy.log"
+    LOG_OWNER="${SUDO_USER:-$(whoami)}"
 
     # Create log file if it doesn't exist
     if [ ! -f "$LOG_FILE" ]; then
         sudo touch "$LOG_FILE"
         sudo chmod 644 "$LOG_FILE"
+        sudo chown "$LOG_OWNER":"$LOG_OWNER" "$LOG_FILE"
     fi
 
     # Unified logging function
