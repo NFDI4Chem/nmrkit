@@ -6,12 +6,17 @@ ENV OPENBABEL_VERSION=v3.1
 ARG RELEASE_VERSION
 ENV RELEASE_VERSION=${RELEASE_VERSION}
 
-# Install runtime dependencies
+# Install runtime and build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     software-properties-common \
     openjdk-17-jre \
-    curl && \
+    curl \
+    build-essential \
+    gcc \
+    g++ \
+    git \
+    wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     conda update -n base -c defaults conda
@@ -36,8 +41,7 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 COPY ./alembic.ini /code/alembic.ini
 
-RUN pip3 install --upgrade setuptools pip && \
-    apt-get update && apt-get install -y git
+RUN pip3 install --upgrade setuptools pip
 
 RUN pip3 install --no-cache-dir -r /code/requirements.txt
 
