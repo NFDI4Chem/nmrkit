@@ -1,16 +1,15 @@
-
 # This workflow will perform following actions when code is pushed to the development branch:
 # - Run tests and linting checks (can be enabled via needs: test_and_lint)
 # - Build and push nmrKit Docker image with layer caching for faster builds
 # - Conditionally build nmr-cli image only if files in app/scripts/nmr-cli/ changed
 # - Push images to Docker Hub under namespace nfdi4chem with dev-latest tag
 # - Prevent redundant builds using concurrency control
-# 
+#
 # Maintainers:
 #   - name: Nisha Sharma
 #   - email: nisha.sharma@uni-jena.de
 
-name : Prod Build and Publish to Dev
+name: Prod Build and Publish to Dev
 
 on:
   push:
@@ -37,18 +36,18 @@ jobs:
       # Clone repository code to runner
       - name: Check out the repo
         uses: actions/checkout@v4
-      
+
       # Enable advanced Docker build features (required for caching)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       # Authenticate with Docker Hub for image push access
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
       # Detect changes in nmr-cli folder to skip unnecessary builds
       - name: Check for file changes
         id: changes
@@ -57,7 +56,7 @@ jobs:
           filters: |
             nmr-cli:
               - 'app/scripts/nmr-cli/**'
-      
+
       # Build main nmrKit image with registry caching for faster builds
       - name: Build and push nmrKit Docker image
         uses: docker/build-push-action@v6
@@ -67,8 +66,8 @@ jobs:
           push: true
           build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
           tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
+          # cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
+          # cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
 
       # Build nmr-cli image only if files in app/scripts/nmr-cli/ changed
       - name: Build and push nmr-cli Docker image
@@ -80,5 +79,5 @@ jobs:
           push: true
           build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
           tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
+          # cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
+          # cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
