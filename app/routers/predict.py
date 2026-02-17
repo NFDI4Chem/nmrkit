@@ -15,7 +15,12 @@ router = APIRouter(
     prefix="/predict",
     tags=["predict"],
     dependencies=[],
-    responses={404: {"description": "Not Found"}},
+    responses={
+        404: {"description": "Not Found"},
+        408: {"description": "Prediction timed out"},
+        422: {"description": "Invalid input or NMR CLI error"},
+        500: {"description": "Docker or nmr-converter container not available"},
+    },
 )
 
 # Container name for nmr-cli (from docker-compose.yml)
@@ -468,21 +473,40 @@ def get_health() -> HealthCheck:
 @router.post(
     "/",
     tags=["predict"],
-    summary="Predict NMR spectra from MOL string",
-    response_description="Predicted spectra in NMRium JSON format",
+    summary="Predict NMR spectra from a MOL string",
+    description=(
+        "Submit a molecular structure as a MOL block string and predict NMR spectra "
+        "using one of the supported prediction engines.\n\n"
+        "### Supported Engines\n\n"
+        "| Engine | Spectra Types | Typical Time |\n"
+        "|--------|--------------|-------------|\n"
+        "| **nmrshift** | proton, carbon | ~5-10s |\n"
+        "| **nmrdb.org** | proton, carbon, cosy, hsqc, hmbc | ~30-60s |\n\n"
+        "> **Note:** nmrdb.org predictions can take 30-60 seconds. "
+        "Consider using curl or Postman instead of the Swagger UI for long-running requests."
+    ),
+    response_description="Predicted spectra in NMRium-compatible JSON format",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Successfully predicted NMR spectra"},
+        400: {"description": "Unknown engine type"},
+        408: {"description": "Prediction timed out (nmrdb.org: 300s, nmrshift: 120s)"},
+        422: {"description": "Invalid structure or NMR CLI error"},
+        500: {"description": "Docker or nmr-converter container not available"},
+    },
 )
 async def predict_from_structure(request: PredictRequest):
     """
-    ## Predict NMR spectra from MOL string
+    ## Predict NMR spectra from a MOL string
 
     **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not Swagger.
 
-    **Engines:**
-    - **nmrshift** — Supports: proton, carbon
-    - **nmrdb.org** — Supports: proton, carbon, cosy, hsqc, hmbc
+    ### Engines
 
-    **Example (nmrshift):**
+    - **nmrshift** — Supports: `proton`, `carbon`
+    - **nmrdb.org** — Supports: `proton`, `carbon`, `cosy`, `hsqc`, `hmbc`
+
+    ### Example (nmrshift)
     ```json
     {
         "engine": "nmrshift",
@@ -498,7 +522,7 @@ async def predict_from_structure(request: PredictRequest):
     }
     ```
 
-    **Example (nmrdb.org):**
+    ### Example (nmrdb.org)
     ```json
     {
         "engine": "nmrdb.org",
@@ -530,27 +554,52 @@ async def predict_from_structure(request: PredictRequest):
 @router.post(
     "/file",
     tags=["predict"],
-    summary="Predict NMR spectra from uploaded MOL file",
-    response_description="Predicted spectra in NMRium JSON format",
+    summary="Predict NMR spectra from an uploaded MOL file",
+    description=(
+        "Upload a MOL file and predict NMR spectra using one of the supported engines. "
+        "Engine configuration is passed as a JSON string in the `request` form field.\n\n"
+        "### Supported Engines\n\n"
+        "| Engine | Spectra Types | Typical Time |\n"
+        "|--------|--------------|-------------|\n"
+        "| **nmrshift** | proton, carbon | ~5-10s |\n"
+        "| **nmrdb.org** | proton, carbon, cosy, hsqc, hmbc | ~30-60s |\n\n"
+        "> **Note:** nmrdb.org predictions can take 30-60 seconds. "
+        "Consider using curl or Postman instead of the Swagger UI for long-running requests."
+    ),
+    response_description="Predicted spectra in NMRium-compatible JSON format",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Successfully predicted NMR spectra from file"},
+        400: {"description": "Unknown engine type"},
+        408: {"description": "Prediction timed out (nmrdb.org: 300s, nmrshift: 120s)"},
+        422: {"description": "Invalid JSON in request field or NMR CLI error"},
+        500: {"description": "Docker or nmr-converter container not available"},
+    },
 )
 async def predict_from_file(
-    file: UploadFile = File(..., description="MOL file"),
-    request: str = Form(..., description="""JSON string with engine, spectra and options. Examples:
-
-nmrshift: {"engine": "nmrshift", "spectra": ["proton"], "options": {"solvent": "Chloroform-D1 (CDCl3)", "frequency": 400, "nbPoints": 1024, "lineWidth": 1, "peakShape": "lorentzian"}}
-
-nmrdb.org: {"engine": "nmrdb.org", "spectra": ["proton", "carbon"], "options": {"name": "Benzene", "frequency": 400, "1d": {"proton": {"from": -1, "to": 12}, "carbon": {"from": -5, "to": 220}, "nbPoints": 131072, "lineWidth": 1}, "autoExtendRange": true}}
-"""),
+    file: UploadFile = File(..., description="MOL file containing the molecular structure"),
+    request: str = Form(
+        ...,
+        description=(
+            'JSON string with engine, spectra, and options. '
+            'Example (nmrshift): {"engine": "nmrshift", "spectra": ["proton"], '
+            '"options": {"solvent": "Chloroform-D1 (CDCl3)", "frequency": 400, '
+            '"nbPoints": 1024, "lineWidth": 1, "peakShape": "lorentzian"}} — '
+            'Example (nmrdb.org): {"engine": "nmrdb.org", "spectra": ["proton", "carbon"], '
+            '"options": {"name": "Benzene", "frequency": 400, '
+            '"1d": {"proton": {"from": -1, "to": 12}, "carbon": {"from": -5, "to": 220}, '
+            '"nbPoints": 131072, "lineWidth": 1}, "autoExtendRange": true}}'
+        ),
+    ),
 ):
     """
-    ## Predict NMR spectra from uploaded MOL file
+    ## Predict NMR spectra from an uploaded MOL file
 
     Upload a MOL file and pass engine options as a JSON string in the `request` field.
 
-    **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not Swagger.
+    > **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not Swagger.
 
-    **nmrshift example request field:**
+    ### nmrshift example `request` field
     ```json
     {
         "engine": "nmrshift",
@@ -565,7 +614,7 @@ nmrdb.org: {"engine": "nmrdb.org", "spectra": ["proton", "carbon"], "options": {
     }
     ```
 
-    **nmrdb.org example request field:**
+    ### nmrdb.org example `request` field
     ```json
     {
         "engine": "nmrdb.org",

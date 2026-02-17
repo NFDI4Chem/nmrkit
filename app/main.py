@@ -13,9 +13,62 @@ from app.core import config, tasks
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.schemas import HealthCheck
 
+DESCRIPTION = """
+## NMR Kit API
+
+A Python-based microservice for **storing**, **parsing**, **converting**, and
+**predicting** NMR (Nuclear Magnetic Resonance) spectra.
+
+### Modules
+
+| Module | Description |
+|--------|-------------|
+| **Chemistry** | Generate HOSE codes, label atoms via ALATIS |
+| **Spectra** | Parse NMR spectra from files or URLs |
+| **Converter** | Convert NMR raw data to NMRium JSON |
+| **Predict** | Predict NMR spectra using nmrdb.org or nmrshift engines |
+| **Registration** | Register and query molecules via lwreg |
+
+### Links
+
+* [Documentation](https://nfdi4chem.github.io/nmrkit)
+* [Source Code](https://github.com/NFDI4Chem/nmrkit)
+"""
+
+tags_metadata = [
+    {
+        "name": "healthcheck",
+        "description": "Health check endpoints to verify service availability.",
+    },
+    {
+        "name": "chem",
+        "description": "Chemistry operations including HOSE code generation and atom labeling.",
+    },
+    {
+        "name": "spectra",
+        "description": "Parse NMR spectra from uploaded files or remote URLs.",
+    },
+    {
+        "name": "converter",
+        "description": "Convert NMR raw data into NMRium-compatible JSON format.",
+    },
+    {
+        "name": "predict",
+        "description": (
+            "Predict NMR spectra from molecular structures using "
+            "**nmrdb.org** or **nmrshift** prediction engines."
+        ),
+    },
+    {
+        "name": "registration",
+        "description": "Register, query, and retrieve molecules using the lwreg registration system.",
+    },
+]
+
 app = FastAPI(
     title=config.PROJECT_NAME,
-    description="Python-based microservice to store and predict spectra.",
+    version=config.VERSION,
+    description=DESCRIPTION,
     terms_of_service="https://nfdi4chem.github.io/nmrkit",
     contact={
         "name": "Steinbeck Lab",
@@ -26,6 +79,7 @@ app = FastAPI(
         "name": "CC BY 4.0",
         "url": "https://creativecommons.org/licenses/by/4.0/",
     },
+    openapi_tags=tags_metadata,
 )
 
 app.include_router(registration.router)
@@ -42,6 +96,7 @@ app = VersionedFastAPI(
     version_format="{major}",
     prefix_format="/v{major}",
     enable_latest=True,
+    description=DESCRIPTION,
     terms_of_service="https://nfdi4chem.github.io/nmrkit",
     contact={
         "name": "Steinbeck Lab",
@@ -52,6 +107,7 @@ app = VersionedFastAPI(
         "name": "CC BY 4.0",
         "url": "https://creativecommons.org/licenses/by/4.0/",
     },
+    openapi_tags=tags_metadata,
 )
 
 Instrumentator().instrument(app).expose(app)
