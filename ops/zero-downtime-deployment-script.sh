@@ -1,87 +1,87 @@
-#!/bin/bash
+    #!/bin/bash
 
-# Define variables
-COMPOSE_FILE="/mnt/data/nmrkit/ops/docker-compose-dev.yml"
-DOCKER_REPO_NAME="nfdi4chem/nmrkit:dev-latest"
-IMAGE_NAME="nfdi4chem/nmrkit:dev-latest"
-NEW_CONTAINER_ID=""
-IS_CONTAINER_HEALTHY=1
+    # Define variables
+    PROJECT_DIR="/mnt/data/nmrkit"
+    COMPOSE_FILE="docker-compose-prod.yml"
+    NMRKIT_IMAGE="nfdi4chem/nmrkit:dev-latest"
+    NMR_CLI_IMAGE="nfdi4chem/nmr-cli:dev-latest"
+    LOG_FILE="/var/log/nmrkit-deploy.log"
+    LOG_OWNER="${SUDO_USER:-$(whoami)}"
 
-# Function to check the health of the container
-check_health() {
-
-    HEALTH=$(docker inspect --format='{{json .State.Health.Status}}' $NEW_CONTAINER_ID)
-
-    if [[ $HEALTH == *"healthy"* ]]; then
-        echo "Container is healthy."
-        return 0
-    else
-        echo "Container is unhealthy or still starting"
-        return 1
+    # Create log file if it doesn't exist
+    if [ ! -f "$LOG_FILE" ]; then
+        sudo touch "$LOG_FILE"
+        sudo chmod 644 "$LOG_FILE"
+        sudo chown "$LOG_OWNER":"$LOG_OWNER" "$LOG_FILE"
     fi
 
-}
+    # Unified logging function
+    log_message() {
+        echo "$1"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+    }
 
-# Check if there is a new image available in the Docker repository
-if [ "$(docker pull $DOCKER_REPO_NAME | grep "Status: Image is up to date" | wc -l)" -eq 0 ]; then
+    # === Start of script ===
+    log_message "🚀 =========================================="
+    log_message "🚀 Starting NMRKit Deployment Script"
+    log_message "🚀 =========================================="
+    
+    # Change to project directory to ensure paths resolve correctly
+    cd "$PROJECT_DIR/ops" || {
+        log_message "❌ Failed to change to directory $PROJECT_DIR/ops"
+        exit 1
+    }
+    log_message "📂 Working directory: $(pwd)"
 
-  # Scale up a new container
-   echo "Scale up new container.."
-   docker-compose -f $COMPOSE_FILE up -d --scale web=2 --no-recreate
+    # === Functions ===
 
-   NEW_CONTAINER_ID=$(docker ps -q -l)
+    # Cleanup function
+    cleanup() {
+        log_message "🧹 Cleaning up dangling images..."
+        docker image prune -f >/dev/null 2>&1 || true
+        log_message "✅ Cleanup completed"
+    }
 
-  echo "New Container Id is.."
-  echo "$NEW_CONTAINER_ID"
-
-  # Wait for new containers to start and health checks to pass
-   echo "Waiting for the new containers to start and health check to pass retry 5 times.."
-   n=0;
-   while [ $n -le 10 ]
-   do
-         if ! check_health; then
-                n=$(( $n + 1 ))
-                sleep 1m
-                echo "Container not healthy.. Check again.."
-         else
-                IS_CONTAINER_HEALTHY=0
-                break
-         fi
-   done
-
-  # Remove old containers and images
-  if [ $IS_CONTAINER_HEALTHY == 0 ] ; then
-
-        # Set the desired container name prefix
-        CONTAINER_NAME_PREFIX="ops_web"
-
-        # Retrieve the container IDs that match the prefix
-        container_ids=$(docker ps -a --filter "name=^/${CONTAINER_NAME_PREFIX}" --format "{{.ID}}")
-
-        # Sort the container IDs by creation date in ascending order
-        sorted_container_ids=$(echo "$container_ids" | xargs docker inspect --format='{{.Created}} {{.ID}}' | sort | awk '{print $2}')
-
-        # Get the oldest container ID
-        oldest_container_id=$(echo "$sorted_container_ids" | head -n 1)
-
-        # Check if any container IDs were found
-        if [[ -z "$oldest_container_id" ]]; then
-                echo "No containers found with the name prefix '${CONTAINER_NAME_PREFIX}'."
-                exit 1
+    # Deploy a service by pulling latest image and recreating container if updated
+    deploy_service() {
+        local service_name=$1
+        local image=$2
+        
+        log_message "📦 Starting deployment for service: $service_name"
+        log_message "🔍 Checking for new image: $image"
+        
+        # Pull the latest image
+        if [ "$(docker pull "$image" | grep -c "Status: Image is up to date")" -eq 0 ]; then
+            log_message "✨ New image detected for $service_name"
+            log_message "🚀 Recreating container with updated image..."
+            docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-deps "$service_name"
+            log_message "✅ Deployment of $service_name completed successfully"
+        else
+            log_message "✅ Image for $service_name is up to date. Skipping deployment."
         fi
+    }
 
-        # Delete the old container and unused images
-        docker stop $oldest_container_id
-        docker rm $oldest_container_id
-        docker image prune -af
-        echo "Deleted the oldest container with ID: ${oldest_container_id}"
+    # Main deployment process
+    main() {
+        log_message "────────────────────────────────────────"
+        log_message "🔄 Deploying NMRKit API Service"
+        log_message "────────────────────────────────────────"
+        deploy_service "nmrkit-api" "$NMRKIT_IMAGE"
+        
+        log_message ""
+        log_message "────────────────────────────────────────"
+        log_message "🔄 Deploying NMR-Load-Save Service"
+        log_message "────────────────────────────────────────"
+        deploy_service "nmr-converter" "$NMR_CLI_IMAGE"
+        
+        log_message ""
+        cleanup
+        
+        log_message ""
+        log_message "🎉 =========================================="
+        log_message "🎉 All Deployments Completed Successfully!"
+        log_message "🎉 =========================================="
+    }
 
-  else
-        echo "Couldnot complete the deployment as the container is unhealthy.."
-        docker stop $NEW_CONTAINER_ID
-        docker rm $NEW_CONTAINER_ID
-  fi
-
-else
-       echo "Skipping deployment as no new image available.."
-fi
+    # Execute main deployment
+    main
