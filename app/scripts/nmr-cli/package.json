@@ -25,7 +25,7 @@
     "ml-spectra-processing": "^14.19.0",
     "nmr-processing": "^22.1.0",
     "openchemlib": "^9.19.0",
-    "playwright": "^1.56.1",
+    "playwright": "1.56.1",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
