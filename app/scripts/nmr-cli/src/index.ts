@@ -2,8 +2,11 @@
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
 import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
+import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
+import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
 import { hideBin } from 'yargs/helpers'
 import { parsePredictionCommand } from './prediction'
+import { readFileSync } from 'fs'
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -12,6 +15,7 @@ Commands:
   parse-spectra                Parse a spectra file to NMRium file
   parse-publication-string     resurrect spectrum from the publication string 
   predict                      Predict spectrum from Mol 
+  peaks-to-nmrium              Convert a peak list to NMRium object
 
 Options for 'parse-spectra' command:
   -u, --url                File URL  
@@ -61,12 +65,27 @@ nmrshift engine options:
 
 
 
+Arguments for 'peaks-to-nmrium' command:
+  Reads JSON from stdin with the following structure:
+  {
+    "peaks": [{ "x": 7.26, "y": 1, "width": 1 }, ...],
+    "options": {
+      "nucleus": "1H",          (default: "1H")
+      "solvent": "",            (default: "")
+      "frequency": 400,         (default: 400)
+      "from": -1,               (optional, auto-computed from peaks)
+      "to": 12,                 (optional, auto-computed from peaks)
+      "nbPoints": 131072        (default: 131072)
+    }
+  }
+
 Examples:
   nmr-cli  parse-spectra -u file-url -s                                   // Process spectra files from a URL and capture an image for the spectra
   nmr-cli  parse-spectra -dir directory-path -s                             // process a spectra files from a directory and capture an image for the spectra
   nmr-cli  parse-spectra -u file-url                                      // Process spectra files from a URL 
   nmr-cli  parse-spectra -dir directory-path                                // Process spectra files from a directory 
   nmr-cli  parse-publication-string "your publication string"
+  echo '{"peaks":[{"x":7.26},{"x":2.10}]}' | nmr-cli peaks-to-nmrium     // Convert peaks to NMRium object
 `
 
 export interface FileOptionsArgs {
@@ -177,11 +196,32 @@ const parsePublicationCommand: CommandModule = {
   },
 }
 
+// Define the peaks-to-nmrium command
+const peaksToNMRiumCommand: CommandModule = {
+  command: ['peaks-to-nmrium', 'ptn'],
+  describe: 'Convert a peak list to NMRium object (reads JSON from stdin)',
+  handler: () => {
+    try {
+      const stdinData = readFileSync(0, 'utf-8')
+      const input: PeaksToNMRiumInput = JSON.parse(stdinData)
+      const nmriumObject = generateNMRiumFromPeaks(input)
+      console.log(JSON.stringify(nmriumObject))
+    } catch (error) {
+      console.error(
+        'Error:',
+        error instanceof Error ? error.message : String(error),
+      )
+      process.exit(1)
+    }
+  },
+}
+
 yargs(hideBin(process.argv))
   .usage(usageMessage)
   .command(parseFileCommand)
   .command(parsePublicationCommand)
   .command(parsePredictionCommand)
+  .command(peaksToNMRiumCommand)
   .showHelpOnFail(true)
   .help()
   .parse()

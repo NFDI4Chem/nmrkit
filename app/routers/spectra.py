@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 import io
 from app.schemas import HealthCheck
 from pydantic import BaseModel, HttpUrl, Field
+from typing import Optional
 import subprocess
 import tempfile
 import os
@@ -225,6 +226,103 @@ def remove_file_from_container(container_path: str) -> None:
         pass
 
 
+class PeakItem(BaseModel):
+    """A single NMR peak."""
+    x: float = Field(..., description="Chemical shift in ppm")
+    y: Optional[float] = Field(1.0, description="Peak intensity (default: 1.0)")
+    width: Optional[float] = Field(1.0, description="Peak width in Hz (default: 1.0)")
+
+
+class PeaksToNMRiumOptions(BaseModel):
+    """Options for peaks-to-NMRium conversion."""
+    nucleus: Optional[str] = Field("1H", description="Nucleus type (e.g. '1H', '13C')")
+    solvent: Optional[str] = Field("", description="NMR solvent")
+    frequency: Optional[float] = Field(400, description="NMR frequency in MHz")
+    nbPoints: Optional[int] = Field(131072, description="Number of points for spectrum generation", alias="nb_points")
+
+    model_config = {"populate_by_name": True}
+
+
+class PeaksToNMRiumRequest(BaseModel):
+    """Request model for converting peaks to NMRium object."""
+    peaks: list[PeakItem] = Field(
+        ...,
+        min_length=1,
+        description="List of NMR peaks with chemical shift (x), intensity (y), and width",
+    )
+    options: Optional[PeaksToNMRiumOptions] = Field(
+        None,
+        description="Spectrum generation options",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "peaks": [
+                        {"x": 7.26, "y": 1, "width": 1},
+                        {"x": 2.10, "y": 1, "width": 1},
+                    ],
+                    "options": {
+                        "nucleus": "1H",
+                        "frequency": 400,
+                    },
+                }
+            ]
+        }
+    }
+
+
+def run_peaks_to_nmrium_command(payload: dict) -> str:
+    """Execute nmr-cli peaks-to-nmrium command in Docker container via stdin."""
+
+    cmd = ["docker", "exec", "-i", NMR_CLI_CONTAINER, "nmr-cli", "peaks-to-nmrium"]
+    stdin_data = json.dumps(payload)
+
+    try:
+        result = subprocess.run(
+            cmd,
+            input=stdin_data.encode("utf-8"),
+            capture_output=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=408,
+            detail="Processing timeout exceeded",
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="Docker not found or nmr-converter container not running.",
+        )
+
+    if result.returncode != 0:
+        error_msg = result.stderr.decode("utf-8") if result.stderr else "Unknown error"
+        raise HTTPException(
+            status_code=422,
+            detail=f"NMR CLI error: {error_msg}",
+        )
+
+    stdout = result.stdout.decode("utf-8").strip()
+
+    if not stdout:
+        raise HTTPException(
+            status_code=422,
+            detail="NMR CLI returned empty output. The peak list may be invalid.",
+        )
+
+    try:
+        json.loads(stdout)
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid JSON from NMR CLI: {e}",
+        )
+
+    return stdout
+
+
 @router.post(
     "/parse/file",
     tags=["spectra"],
@@ -445,4 +543,99 @@ async def parse_publication_string(
         raise HTTPException(
             status_code=422,
             detail=f"Error parsing publication string: {e}"
+        )
+
+
+@router.post(
+    "/parse/peaks",
+    tags=["spectra"],
+    summary="Convert a peak list to an NMRium-compatible spectrum",
+    description=(
+        "Convert a list of NMR peaks (chemical shifts with optional intensity and "
+        "width) into a full NMRium-compatible spectrum object. Each peak is defined "
+        "by its chemical shift position (`x` in ppm), intensity (`y`), and width "
+        "(in Hz).\n\n"
+        "The peaks are used to generate a simulated 1D spectrum using the "
+        "**nmr-cli** `peaks-to-nmrium` command running inside a Docker container.\n\n"
+        "### Example input\n"
+        "```json\n"
+        "{\n"
+        '  "peaks": [\n'
+        '    {"x": 7.26, "y": 1, "width": 1},\n'
+        '    {"x": 2.10, "y": 1, "width": 1}\n'
+        "  ],\n"
+        '  "options": {\n'
+        '    "nucleus": "1H",\n'
+        '    "frequency": 400\n'
+        "  }\n"
+        "}\n"
+        "```"
+    ),
+    response_description="Generated spectrum in NMRium-compatible JSON format",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Successfully generated spectrum from peak list"},
+        408: {"description": "Processing timeout exceeded (120s limit)"},
+        422: {"description": "Invalid peak list or NMR CLI error"},
+        500: {"description": "Docker or nmr-converter container not available"},
+    },
+)
+async def parse_peaks(request: PeaksToNMRiumRequest):
+    """
+    ## Convert a peak list to NMRium spectrum
+
+    Provide a list of NMR peaks and optional generation parameters to produce
+    an NMRium-compatible spectrum object.
+
+    ### Peak fields
+    | Field   | Type  | Required | Description                    |
+    |---------|-------|----------|--------------------------------|
+    | `x`     | float | Yes      | Chemical shift in ppm          |
+    | `y`     | float | No       | Peak intensity (default: 1.0)  |
+    | `width` | float | No       | Peak width in Hz (default: 1.0)|
+
+    ### Options
+    | Option      | Type   | Default | Description                |
+    |-------------|--------|---------|----------------------------|
+    | `nucleus`   | string | `1H`   | Nucleus type               |
+    | `solvent`   | string | `""`   | NMR solvent                |
+    | `frequency` | float  | `400`  | NMR frequency in MHz       |
+    | `nb_points` | int    | `131072`| Number of spectrum points |
+
+    ### Returns
+    NMRium-compatible JSON with spectrum data and metadata.
+    """
+    if not request.peaks:
+        raise HTTPException(
+            status_code=422,
+            detail="Peaks list cannot be empty.",
+        )
+
+    payload = {
+        "peaks": [peak.model_dump() for peak in request.peaks],
+    }
+    if request.options:
+        payload["options"] = {
+            "nucleus": request.options.nucleus,
+            "solvent": request.options.solvent,
+            "frequency": request.options.frequency,
+            "nbPoints": request.options.nbPoints,
+        }
+
+    try:
+        raw_json = run_peaks_to_nmrium_command(payload)
+        return StreamingResponse(
+            io.BytesIO(raw_json.encode("utf-8")),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": "attachment; filename=nmrium-peaks.json",
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Error converting peaks to NMRium: {e}",
         )
