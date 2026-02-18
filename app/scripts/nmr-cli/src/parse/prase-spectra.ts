@@ -10,6 +10,9 @@ import { initiateDatum1D } from './data/data1D/initiateDatum1D'
 import { detectZones } from './data/data2d/detectZones'
 import { detectRanges } from './data/data1D/detectRanges'
 import { Filters1DManager, Filters2DManager } from 'nmr-processing'
+import yargs from 'yargs'
+import { createWriteStream } from 'fs'
+import { JsonStreamStringify } from 'json-stream-stringify';
 
 type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
@@ -124,8 +127,54 @@ function processSpectra(data: NmriumData, options: ProcessSpectraOptions) {
 
 }
 
+function outputResult(result: any, outputPath?: string) {
+  const stream = new JsonStreamStringify(result);
+
+  if (outputPath) {
+    const writeStream = createWriteStream(outputPath);
+    stream.pipe(writeStream);
+    writeStream.on('finish', () => {
+      process.stderr.write(`Output written to: ${outputPath}\n`);
+    });
+  } else {
+    stream.pipe(process.stdout);
+  }
+}
+
+async function processAndSerialize(
+  nmriumState: Partial<NmriumState>,
+  options: FileOptionsArgs
+) {
+  const { s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false, o, r } = options;
+
+  if (nmriumState.data) {
+    processSpectra(nmriumState.data, { autoDetection, autoProcessing });
+  }
+
+  const images: Snapshot[] = enableSnapshot
+    ? await captureSpectraViewAsBase64(nmriumState)
+    : [];
+
+  const { data, version } = core.serializeNmriumState(
+    nmriumState as NmriumState,
+    { includeData: r ? 'rawData' : 'dataSource', },
+
+  );
+
+  // include the meta and info object in case of serialize as dataSource
+  const spectra: any = data?.spectra || [];
+  if (!r) {
+    for (let i = 0; i < spectra.length; i++) {
+      const { info = {}, meta = {} } = nmriumState.data?.spectra[i] || {};
+      spectra[i] = { ...spectra[i], info, meta }
+    }
+  }
+
+  outputResult({ data, version, images }, o);
+}
+
 async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
-  const { u: url, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+  const { u: url } = options;
 
   const { pathname: relativePath, origin: baseURL } = new URL(url)
   const source = {
@@ -138,26 +187,13 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
   }
 
   const [nmriumState] = await core.readFromWebSource(source, parsingOptions);
-  const {
-    data, version
-  } = nmriumState;
 
+  processAndSerialize(nmriumState, options)
 
-  if (data) {
-    processSpectra(data, { autoDetection, autoProcessing });
-  }
-
-  let images: Snapshot[] = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version })
-  }
-
-  return { data, version, images }
 }
 
 async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>) {
-  const { dir: path, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+  const { dir: path } = options;
 
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
@@ -166,21 +202,33 @@ async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'd
   })
 
   const {
-    nmriumState: { data, version },
+    nmriumState
   } = await core.read(fileCollection, parsingOptions)
 
+  processAndSerialize(nmriumState, options)
 
-  if (data) {
-    processSpectra(data, { autoDetection, autoProcessing })
-  }
-
-  let images: Snapshot[] = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version })
-  }
-
-  return { data, version, images }
 }
 
-export { loadSpectrumFromFilePath, loadSpectrumFromURL }
+
+function parseSpectra(argv: yargs.ArgumentsCamelCase<FileOptionsArgs>
+) {
+
+  const { u, dir } = argv;
+  // Handle parsing the spectra file logic based on argv options
+  if (u) {
+    loadSpectrumFromURL({ u, ...argv });
+  }
+
+
+  if (dir) {
+    loadSpectrumFromFilePath({ dir, ...argv });
+  }
+
+
+
+}
+
+
+
+
+export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra }
