@@ -22,7 +22,7 @@ services:
       - "traefik.http.routers.web.entrypoints=web"
       - "traefik.http.services.web.loadbalancer.server.port=80"
     volumes:
-      - ../app:/code/app
+      # - ../app:/code/app
       - "/var/run/docker.sock:/var/run/docker.sock"
       - shared-data:/shared
     healthcheck:

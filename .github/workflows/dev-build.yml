@@ -66,8 +66,8 @@ jobs:
           push: true
           build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
           tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-          # cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
-          # cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
 
       # Build nmr-cli image only if files in app/scripts/nmr-cli/ changed
       - name: Build and push nmr-cli Docker image
@@ -79,5 +79,5 @@ jobs:
           push: true
           build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
           tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-          # cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
-          # cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
