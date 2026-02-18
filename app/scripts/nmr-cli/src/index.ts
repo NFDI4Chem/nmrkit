@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
-import { loadSpectrumFromURL, loadSpectrumFromFilePath } from './parse/prase-spectra'
+import { parseSpectra } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
 import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
 import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
 import { hideBin } from 'yargs/helpers'
 import { parsePredictionCommand } from './prediction'
 import { readFileSync } from 'fs'
+import { IncludeData } from '@zakodium/nmrium-core'
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -23,7 +24,9 @@ Options for 'parse-spectra' command:
   -s, --capture-snapshot   Capture snapshot  
   -p, --auto-processing    Automatic processing of spectrum (FID → FT spectra).
   -d, --auto-detection     Enable ranges and zones automatic detection.
-
+  -o, --output             Output file path (optional)
+  -r, --raw-data           Include raw data in the output instead of data source
+  
 Arguments for 'parse-publication-string' command:
   publicationString   Publication string
  
@@ -119,6 +122,17 @@ export interface FileOptionsArgs {
    * Perform automatic ranges and zones detection.
    */
   d?: boolean;
+  /**
+   *   -o, --output      
+   *   Output file path
+   */
+  o?: string;
+  /**
+   *  -r, --raw-data   
+   *   Include raw data in the output, defaults to dataSource
+   */
+  r?: boolean;
+
 }
 
 // Define options for parsing a spectra file
@@ -150,6 +164,17 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
     describe: 'Ranges and zones auto detection',
     type: 'boolean',
   },
+  o: {
+    alias: 'output',
+    type: 'string',
+    description: 'Output file path',
+  },
+  r: {
+    alias: 'raw-data',
+    type: 'boolean',
+    default: false,
+    description: 'Include raw data in the output (default: dataSource)',
+  },
 } as const
 
 const parseFileCommand: CommandModule<{}, FileOptionsArgs> = {
@@ -161,22 +186,7 @@ const parseFileCommand: CommandModule<{}, FileOptionsArgs> = {
       .conflicts('u', 'dir') as Argv<FileOptionsArgs>
   },
   handler: argv => {
-
-    const { u, dir } = argv;
-    // Handle parsing the spectra file logic based on argv options
-    if (u) {
-      loadSpectrumFromURL({ u, ...argv }).then(result => {
-        console.log(JSON.stringify(result))
-      })
-    }
-
-
-    if (dir) {
-      loadSpectrumFromFilePath({ dir, ...argv }).then(result => {
-        console.log(JSON.stringify(result))
-      })
-    }
-
+    parseSpectra(argv)
   },
 }
 
