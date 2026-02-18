@@ -1,5 +1,5 @@
 import subprocess
-from fastapi import APIRouter, HTTPException, status, Response
+from fastapi import APIRouter, HTTPException, status, Response, Query
 from app.schemas import HealthCheck
 
 router = APIRouter(
@@ -36,17 +36,42 @@ def get_health() -> HealthCheck:
 @router.get(
     "/spectra",
     tags=["converter"],
-    summary="Load and convert NMR raw data",
-    # response_model=List[int],
-    response_description="Load and convert NMR raw data",
+    summary="Convert NMR raw data to NMRium JSON",
+    description=(
+        "Fetch NMR raw data from a remote URL and convert it into "
+        "[NMRium](https://www.nmrium.org/)-compatible JSON format. "
+        "The conversion is performed by the **nmr-cli** tool running "
+        "inside a Docker container.\n\n"
+        "Supported input formats include Bruker, JCAMP-DX, and other "
+        "formats recognized by nmr-cli."
+    ),
+    response_description="NMRium-compatible JSON representation of the NMR data",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "Successfully converted NMR data to NMRium JSON",
+            "content": {"application/json": {}},
+        },
+        500: {"description": "Conversion failed or Docker container not available"},
+    },
 )
-async def nmr_load_save(url: str):
+async def nmr_load_save(
+    url: str = Query(
+        ...,
+        description="URL pointing to the NMR raw data file to convert",
+        examples=["https://example.com/nmr-data/sample.zip"],
+    ),
+):
     """
-    ## Return nmrium json
+    ## Convert NMR raw data to NMRium JSON
 
-    Returns:
-        Return nmrium json
+    Fetches NMR raw data from the provided URL and converts it into NMRium JSON format.
+
+    ### Parameters
+    - **url**: A publicly accessible URL pointing to the NMR raw data
+
+    ### Returns
+    NMRium-compatible JSON object containing the converted spectra data.
     """
     process = subprocess.Popen(
         ["docker exec nmr-converter nmr-cli -u " + url],

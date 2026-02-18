@@ -1,11 +1,9 @@
 from typing import Annotated
 from psycopg2.errors import UniqueViolation
 from app.modules.cdkmodules import getCDKHOSECodes
-from fastapi import APIRouter, HTTPException, status, Query, Body
+from fastapi import APIRouter, HTTPException, status, Query
 from app.modules.rdkitmodules import getRDKitHOSECodes
 from app.schemas import HealthCheck
-from app.schemas.alatis import AlatisModel
-import requests
 
 router = APIRouter(
     prefix="/chem",
@@ -41,23 +39,91 @@ def get_health() -> HealthCheck:
 @router.get(
     "/hosecode",
     tags=["chem"],
-    summary="Generates HOSE codes of molecule",
+    summary="Generate HOSE codes for a molecule",
+    description=(
+        "Generate **Hierarchically Ordered Spherical Environment (HOSE)** codes "
+        "for every atom in the given molecule. HOSE codes encode the local chemical "
+        "environment around each atom up to a configurable number of spheres.\n\n"
+        "Supports two cheminformatics frameworks:\n"
+        "- **CDK** (Chemistry Development Kit) — default, supports stereo\n"
+        "- **RDKit** — alternative implementation"
+    ),
     response_model=list[str],
-    response_description="Returns an array of hose codes generated",
+    response_description="Array of HOSE code strings, one per atom in the molecule",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "Successfully generated HOSE codes",
+            "content": {
+                "application/json": {
+                    "example": [
+                        "C(CC,CC,&)",
+                        "C(CC,C&,&)",
+                        "C(CC,CC,&)",
+                        "C(CCC,CC&,&)",
+                        "C(CC,CC,CC)",
+                        "C(CC,CC,CC)",
+                    ]
+                }
+            },
+        },
+        409: {"description": "Molecule already exists (unique constraint violation)"},
+        422: {"description": "Error parsing the molecular structure"},
+    },
 )
 async def HOSE_Codes(
-    smiles: Annotated[str, Query(examples=["CCCC1CC1"])],
-    framework: Annotated[str, Query(enum=["cdk", "rdkit"])] = "cdk",
-    spheres: Annotated[int, Query()] = 3,
-    usestereo: Annotated[bool, Query()] = False,
+    smiles: Annotated[
+        str,
+        Query(
+            description="SMILES string representing the molecular structure",
+            example="CCCC1CC1",
+            examples=[
+                "CCCC1CC1",
+                "c1ccccc1",
+                "CC(=O)O",
+                "CCO",
+                "C1CCCCC1",
+                "CC(=O)Oc1ccccc1C(=O)O",
+            ],
+        ),
+    ],
+    framework: Annotated[
+        str,
+        Query(
+            enum=["cdk", "rdkit"],
+            description="Cheminformatics framework to use for HOSE code generation",
+        ),
+    ] = "cdk",
+    spheres: Annotated[
+        int,
+        Query(
+            description="Number of spheres (bond distance) to consider around each atom",
+            ge=1,
+            le=10,
+        ),
+    ] = 3,
+    usestereo: Annotated[
+        bool,
+        Query(
+            description="Whether to include stereochemistry information in HOSE codes (CDK only)",
+        ),
+    ] = False,
 ) -> list[str]:
     """
-    ## Generates HOSE codes for a given molecule
-    Endpoint to generate HOSE codes based on each atom in the given molecule.
+    ## Generate HOSE codes for a given molecule
 
-    Returns:
-        HOSE Codes: An array of hose codes generated
+    Generates HOSE (Hierarchically Ordered Spherical Environment) codes based on
+    each atom in the given molecule. These codes are widely used in NMR chemical
+    shift prediction.
+
+    ### Parameters
+    - **smiles**: A valid SMILES string (e.g. `CCCC1CC1`)
+    - **framework**: Choose `cdk` (default) or `rdkit`
+    - **spheres**: Number of bond spheres to encode (default: 3)
+    - **usestereo**: Include stereochemistry in codes (CDK only, default: false)
+
+    ### Returns
+    An array of HOSE code strings, one for each atom in the molecule.
     """
     try:
         if framework == "cdk":
@@ -76,34 +142,5 @@ async def HOSE_Codes(
         raise HTTPException(
             status_code=422,
             detail="Error parsing the structure " + e.message,
-            headers={"X-Error": "RDKit molecule input parse error"},
-        )
-
-
-@router.post(
-    "/label-atoms",
-    tags=["chem"],
-    summary="Label atoms using ALATIS naming system",
-    response_model=AlatisModel,
-    response_description="",
-    status_code=status.HTTP_200_OK,
-)
-async def label_atoms(data: Annotated[str, Body(embed=False, media_type="text/plain")]):
-    """
-    ## Generates atom labels for a given molecule
-
-    Returns:
-        JSON with various representations
-    """
-    try:
-        url = "http://alatis.nmrfam.wisc.edu/upload"
-        payload = {"input_text": data, "format": "format_", "response_type": "json"}
-        response = requests.request("POST", url, data=payload)
-        response.raise_for_status()  # Raise an error for bad status codes
-        return response.json()
-    except Exception as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Error parsing the structure: {str(e)}",
             headers={"X-Error": "RDKit molecule input parse error"},
         )
