@@ -48,6 +48,8 @@ class UrlParseRequest(BaseModel):
         False,
         description="Enable ranges and zones automatic detection",
     )
+    raw_data: bool = Field(
+        False, description="Include raw data in the output (default: data source)")
 
     model_config = {
         "json_schema_extra": {
@@ -92,8 +94,9 @@ def run_command(
     capture_snapshot: bool = False,
     auto_processing: bool = False,
     auto_detection: bool = False,
-) -> dict:
-    """Execute nmr-cli command in Docker container"""
+    raw_data: bool = False,
+) -> StreamingResponse:
+    """Execute nmr-cli parse-spectra command in Docker container."""
 
     cmd = ["nmr-cli", "parse-spectra"]
 
@@ -108,41 +111,33 @@ def run_command(
         cmd.append("-p")
     if auto_detection:
         cmd.append("-d")
+    if raw_data:
+        cmd.append("-r")
 
     try:
         result = subprocess.run(
             ["docker", "exec", NMR_CLI_CONTAINER] + cmd,
             capture_output=True,
-            text=False,
-            timeout=120
+            timeout=120,
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(
-            status_code=408,
-            detail="Processing timeout exceeded"
-        )
+            status_code=408, detail="Processing timeout exceeded")
     except FileNotFoundError:
         raise HTTPException(
-            status_code=500,
-            detail="Docker not found or nmr-converter container not running."
-        )
+            status_code=500, detail="Docker not found or nmr-converter container not running.")
 
     if result.returncode != 0:
-        error_msg = result.stderr.decode(
-            "utf-8") if result.stderr else "Unknown error"
         raise HTTPException(
             status_code=422,
-            detail=f"NMR CLI error: {error_msg}"
+            detail=f"NMR CLI error: {result.stderr.decode('utf-8') or 'Unknown error'}",
         )
 
-    # Parse output
-    try:
-        return json.loads(result.stdout.decode("utf-8"))
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Invalid JSON from NMR CLI: {e}"
-        )
+    return StreamingResponse(
+        io.BytesIO(result.stdout),
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=parse-output.json"},
+    )
 
 
 def run_publication_string_command(publication_string: str) -> dict:
@@ -229,16 +224,20 @@ def remove_file_from_container(container_path: str) -> None:
 class PeakItem(BaseModel):
     """A single NMR peak."""
     x: float = Field(..., description="Chemical shift in ppm")
-    y: Optional[float] = Field(1.0, description="Peak intensity (default: 1.0)")
-    width: Optional[float] = Field(1.0, description="Peak width in Hz (default: 1.0)")
+    y: Optional[float] = Field(
+        1.0, description="Peak intensity (default: 1.0)")
+    width: Optional[float] = Field(
+        1.0, description="Peak width in Hz (default: 1.0)")
 
 
 class PeaksToNMRiumOptions(BaseModel):
     """Options for peaks-to-NMRium conversion."""
-    nucleus: Optional[str] = Field("1H", description="Nucleus type (e.g. '1H', '13C')")
+    nucleus: Optional[str] = Field(
+        "1H", description="Nucleus type (e.g. '1H', '13C')")
     solvent: Optional[str] = Field("", description="NMR solvent")
     frequency: Optional[float] = Field(400, description="NMR frequency in MHz")
-    nbPoints: Optional[int] = Field(131072, description="Number of points for spectrum generation", alias="nb_points")
+    nbPoints: Optional[int] = Field(
+        131072, description="Number of points for spectrum generation", alias="nb_points")
 
     model_config = {"populate_by_name": True}
 
@@ -276,7 +275,8 @@ class PeaksToNMRiumRequest(BaseModel):
 def run_peaks_to_nmrium_command(payload: dict) -> str:
     """Execute nmr-cli peaks-to-nmrium command in Docker container via stdin."""
 
-    cmd = ["docker", "exec", "-i", NMR_CLI_CONTAINER, "nmr-cli", "peaks-to-nmrium"]
+    cmd = ["docker", "exec", "-i", NMR_CLI_CONTAINER,
+           "nmr-cli", "peaks-to-nmrium"]
     stdin_data = json.dumps(payload)
 
     try:
@@ -298,7 +298,8 @@ def run_peaks_to_nmrium_command(payload: dict) -> str:
         )
 
     if result.returncode != 0:
-        error_msg = result.stderr.decode("utf-8") if result.stderr else "Unknown error"
+        error_msg = result.stderr.decode(
+            "utf-8") if result.stderr else "Unknown error"
         raise HTTPException(
             status_code=422,
             detail=f"NMR CLI error: {error_msg}",
@@ -344,7 +345,8 @@ def run_peaks_to_nmrium_command(payload: dict) -> str:
     },
 )
 async def parse_spectra_from_file(
-    file: UploadFile = File(..., description="NMR spectra file to parse (JCAMP-DX, Bruker zip, etc.)"),
+    file: UploadFile = File(
+        ..., description="NMR spectra file to parse (JCAMP-DX, Bruker zip, etc.)"),
     capture_snapshot: bool = Form(
         False,
         description="Generate an image snapshot of the spectra",
@@ -357,6 +359,8 @@ async def parse_spectra_from_file(
         False,
         description="Enable ranges and zones automatic detection",
     ),
+    raw_data: bool = Form(
+        False, description="Include raw data in the output (default: data source references)")
 ):
     """
     ## Parse spectra from an uploaded file
@@ -369,7 +373,7 @@ async def parse_spectra_from_file(
     | `capture_snapshot` | Capture an image snapshot of the spectra |
     | `auto_processing` | Automatically process FID → FT spectra |
     | `auto_detection` | Automatically detect ranges and zones |
-
+    | `raw_data` | Include raw data in the output (default: data source) |
     ### Returns
     Parsed spectra data in NMRium-compatible JSON format.
     """
@@ -398,6 +402,7 @@ async def parse_spectra_from_file(
             capture_snapshot=capture_snapshot,
             auto_processing=auto_processing,
             auto_detection=auto_detection,
+            raw_data=raw_data,
         )
 
     except HTTPException:
@@ -445,6 +450,7 @@ async def parse_spectra_from_url(request: UrlParseRequest):
     | `capture_snapshot` | Capture an image snapshot of the spectra |
     | `auto_processing` | Automatically process FID → FT spectra |
     | `auto_detection` | Automatically detect ranges and zones |
+    | `raw_data` | Include raw data in the output (default: data source) |
 
     ### Returns
     Parsed spectra data in NMRium-compatible JSON format.
@@ -455,6 +461,7 @@ async def parse_spectra_from_url(request: UrlParseRequest):
             capture_snapshot=request.capture_snapshot,
             auto_processing=request.auto_processing,
             auto_detection=request.auto_detection,
+            raw_data=request.raw_data,
         )
 
     except HTTPException:
