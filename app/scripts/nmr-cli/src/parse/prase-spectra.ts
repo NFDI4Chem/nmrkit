@@ -38,7 +38,7 @@ function generateNMRiumURL() {
 }
 
 async function launchBrowser() {
-  return playwright.chromium.launch();
+  return playwright.firefox.launch();
 }
 
 async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>): Promise<Snapshot[]> {
