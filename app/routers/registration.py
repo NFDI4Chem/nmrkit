@@ -1,6 +1,6 @@
 from typing import List, Annotated, Union
 from app.core.config import LWREG_CONFIG
-from fastapi import APIRouter, HTTPException, Body, status
+from fastapi import APIRouter, HTTPException, Body, Query, status
 from lwreg.utils import (
     initdb,
     bulk_register,
@@ -16,7 +16,10 @@ router = APIRouter(
     prefix="/registration",
     tags=["registration"],
     dependencies=[],
-    responses={404: {"description": "Not Found"}},
+    responses={
+        404: {"description": "Not Found"},
+        500: {"description": "Internal server error"},
+    },
 )
 
 
@@ -34,7 +37,7 @@ def get_health() -> HealthCheck:
     """
     ## Perform a Health Check
     Endpoint to perform a healthcheck on. This endpoint can primarily be used by Docker
-    to ensure a robust container orchestration and management is in place. Other
+    to ensure a robust container orchestration and management are in place. Other
     services which rely on the proper functioning of the API service will not deploy if this
     endpoint returns any other HTTP status code except 200 (OK).
     Returns:
@@ -46,20 +49,42 @@ def get_health() -> HealthCheck:
 @router.post(
     "/init",
     tags=["registration"],
-    summary="Initializes the registration database",
-    response_description="Returns boolean indicating the success of the initialisation",
+    summary="Initialize the registration database",
+    description=(
+        "Initialize (or re-initialize) the molecule registration database. "
+        "**Warning:** This operation destroys all existing data in the registration "
+        "database. Set `confirm` to `true` to proceed."
+    ),
+    response_description="Boolean indicating whether initialization was successful",
     status_code=status.HTTP_200_OK,
     response_model=Union[bool, None],
+    responses={
+        200: {
+            "description": "Database initialized successfully",
+            "content": {"application/json": {"example": True}},
+        },
+    },
 )
-async def initialise_database(confirm: Annotated[bool, Body(embed=True)] = False):
+async def initialise_database(
+    confirm: Annotated[
+        bool,
+        Body(
+            embed=True,
+            description="Set to true to confirm database initialization. False returns immediately.",
+        ),
+    ] = False,
+):
     """
-    ## Initializes the registration database
+    ## Initialize the registration database
 
-    NOTE: This call destroys any existing information in the registration database
+    > **WARNING:** This call destroys any existing information in the registration database.
 
-    Arguments:
+    ### Parameters
+    - **confirm**: Must be set to `true` to actually perform the initialization.
+      If `false` (default), the call returns immediately without changes.
 
-    confirm -- if set to False we immediately return
+    ### Returns
+    `true` if initialization was successful, `null` if confirm was `false`.
     """
     return initdb(config=LWREG_CONFIG, confirm=confirm)
 
@@ -67,23 +92,78 @@ async def initialise_database(confirm: Annotated[bool, Body(embed=True)] = False
 @router.post(
     "/register",
     tags=["registration"],
-    summary="Registers new molecules",
-    response_description="Returns the new registry number(s) (molregno). If all entries are duplicates exception is raised",
+    summary="Register new molecules",
+    description=(
+        "Register one or more molecules in the database. Accepts SMILES strings "
+        "(one per line) or an SDF block as plain text. Returns the new registry "
+        "numbers (molregnos) for successfully registered molecules.\n\n"
+        "Duplicate molecules are flagged as `DUPLICATE` and parse failures as "
+        "`PARSE_FAILURE` in the response array."
+    ),
+    response_description="Array of registry numbers (integers) or status strings (DUPLICATE, PARSE_FAILURE)",
     status_code=status.HTTP_200_OK,
     response_model=List[Union[str, int]],
+    responses={
+        200: {
+            "description": "Molecules registered successfully",
+            "content": {
+                "application/json": {
+                    "example": [1, "DUPLICATE", 3],
+                }
+            },
+        },
+        422: {"description": "Registration failed — all entries are duplicates or unparseable"},
+    },
 )
 async def register_compounds(
-    data: Annotated[str, Body(embed=False, media_type="text/plain")] = "CCCC"
+    data: Annotated[
+        str,
+        Body(
+            embed=False,
+            media_type="text/plain",
+            description=(
+                "Molecular data as plain text. Provide either SMILES strings "
+                "(one per line) or an SDF block (containing $$$$ delimiters)."
+            ),
+            openapi_examples={
+                "smiles": {
+                    "summary": "SMILES input",
+                    "description": "One or more SMILES strings, one per line",
+                    "value": "CCCC\nCCCCO\nc1ccccc1",
+                },
+                "sdf": {
+                    "summary": "SDF block",
+                    "description": "An SDF block with $$$$ delimiters",
+                    "value": (
+                        "\n  Mrv2311 08092305412D\n\n"
+                        "  3  2  0  0  0  0            999 V2000\n"
+                        "   -0.4018    0.6926    0.0000 C   0  0  0  0  0  0\n"
+                        "    0.3127    1.1051    0.0000 C   0  0  0  0  0  0\n"
+                        "    1.0272    0.6926    0.0000 O   0  0  0  0  0  0\n"
+                        "  1  2  1  0  0  0  0\n"
+                        "  2  3  1  0  0  0  0\n"
+                        "M  END\n$$$$"
+                    ),
+                },
+            },
+        ),
+    ] = "CCCC",
 ):
     """
-    ## Registers new molecules, assuming it doesn't already exist,
-    and returns the new registry number(s) (molregno). If all entries
-    are duplicates exception is raised
+    ## Register new molecules
 
-    #### Only one of the molecule format objects should be provided
+    Registers one or more molecules (assuming they don't already exist) and returns
+    the new registry number(s) (molregno).
 
-    molblock   -- MOL or SDF block
-    smiles     -- smiles
+    ### Input Formats
+    - **SMILES** — one SMILES string per line
+    - **SDF block** — MOL/SDF format with `$$$$` delimiters
+
+    ### Response
+    An array where each element is either:
+    - An **integer** — the new molregno for a successfully registered molecule
+    - `"DUPLICATE"` — the molecule already exists in the database
+    - `"PARSE_FAILURE"` — the molecule could not be parsed
     """
     try:
         if "$$$$" in data:
@@ -120,17 +200,45 @@ async def register_compounds(
 @router.get(
     "/query",
     tags=["registration"],
-    summary="Queries to see if a molecule has already been registered",
+    summary="Query if a molecule is already registered",
+    description=(
+        "Check whether a molecule (given as a SMILES string) has already been "
+        "registered in the database. Returns the corresponding registry numbers "
+        "(molregnos) if found."
+    ),
     response_model=List[int],
-    response_description="Returns the corresponding registry numbers (molregnos)",
+    response_description="Array of matching registry numbers (molregnos)",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "Query completed successfully",
+            "content": {
+                "application/json": {
+                    "example": [42, 108],
+                }
+            },
+        },
+        500: {"description": "Internal server error during query"},
+    },
 )
-async def query_compounds(smi: str):
+async def query_compounds(
+    smi: str = Query(
+        ...,
+        description="SMILES string of the molecule to query",
+        examples=["CCCC", "c1ccccc1", "CCO"],
+    ),
+):
     """
-    ## Queries to see if a molecule has already been registered
+    ## Query if a molecule is already registered
 
-    Returns:
-        Corresponding registry numbers (molregnos)
+    Checks the registration database for the given molecule.
+
+    ### Parameters
+    - **smi**: A valid SMILES string
+
+    ### Returns
+    An array of integer registry numbers (molregnos) matching the query.
+    Returns an empty array if the molecule is not registered.
     """
     try:
         res = query(smiles=smi, config=LWREG_CONFIG)
@@ -142,18 +250,49 @@ async def query_compounds(smi: str):
 @router.post(
     "/retrieve",
     tags=["registration"],
-    summary="Retrieves entries based on the list of IDs provided",
+    summary="Retrieve registered molecules by ID",
+    description=(
+        "Retrieve one or more registered molecules by their registry IDs (molregnos). "
+        "Returns the molecular data and format for each requested ID."
+    ),
     response_model=tuple(),
-    response_description="Returns HTTP Status Code 200 (OK)",
+    response_description="Array of (molregno, data, format) tuples for each requested ID",
     status_code=status.HTTP_200_OK,
+    responses={
+        200: {
+            "description": "Successfully retrieved molecule data",
+            "content": {
+                "application/json": {
+                    "example": [
+                        [1, "CCCC", "smiles"],
+                        [2, "CCO", "smiles"],
+                    ],
+                }
+            },
+        },
+        500: {"description": "Internal server error during retrieval"},
+    },
 )
-async def retrieve_compounds(ids: List[int]):
+async def retrieve_compounds(
+    ids: List[int] = Body(
+        ...,
+        description="List of registry IDs (molregnos) to retrieve",
+        examples=[[1, 2, 3]],
+    ),
+):
     """
-    ## Retrieves entries based on the ids provided
+    ## Retrieve registered molecules by ID
 
-    Returns:
-        Molecule data for one or more registry ids (molregnos).
-        The return value is a tuple of (molregno, data, format) 3-tuples
+    Fetches molecule data for one or more registry IDs (molregnos).
+
+    ### Request Body
+    A JSON array of integer registry IDs.
+
+    ### Returns
+    An array of `[molregno, data, format]` tuples containing:
+    - **molregno** — the registry number
+    - **data** — the molecular data (SMILES, MOL block, etc.)
+    - **format** — the format of the data
     """
     try:
         res = retrieve(ids=ids, config=LWREG_CONFIG)

@@ -10,6 +10,9 @@ import { initiateDatum1D } from './data/data1D/initiateDatum1D'
 import { detectZones } from './data/data2d/detectZones'
 import { detectRanges } from './data/data1D/detectRanges'
 import { Filters1DManager, Filters2DManager } from 'nmr-processing'
+import yargs from 'yargs'
+import { createWriteStream } from 'fs'
+import { JsonStreamStringify } from 'json-stream-stringify';
 
 type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
@@ -20,8 +23,9 @@ const parsingOptions: ParsingOptions = {
 };
 
 interface Snapshot {
-  image: string
-  id: string
+  id: string;
+  image: string | null;
+  error: string | null;
 }
 
 const core = init()
@@ -33,69 +37,68 @@ function generateNMRiumURL() {
   return url.toString()
 }
 
-async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>) {
-  const { data: { spectra } = { spectra: [] }, version } = nmriumState
-  const browser = await playwright.chromium.launch()
-  const context = await browser.newContext(
-    playwright.devices['Desktop Chrome HiDPI']
-  )
-  const page = await context.newPage()
+async function launchBrowser() {
+  return playwright.firefox.launch();
+}
 
-  const url = generateNMRiumURL()
+async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>): Promise<Snapshot[]> {
+  const { data: { spectra } = { spectra: [] }, version } = nmriumState;
 
-  await page.goto(url)
+  if (!spectra?.length) return [];
 
-  await page.locator('text=Loading').waitFor({ state: 'hidden' })
+  const url = generateNMRiumURL();
+  const snapshots: Snapshot[] = [];
+  let browser = await launchBrowser();
 
-  let snapshots: Snapshot[] = []
+  for (const spectrum of spectra) {
+    let context = null;
 
-  for (const spectrum of spectra || []) {
-    const spectrumObject = {
-      version,
-      data: {
-        spectra: [{ ...spectrum }],
-      },
-    }
-
-    // convert typed array to array
-    const stringObject = JSON.stringify(
-      spectrumObject,
-      (key, value: unknown) => {
-        return ArrayBuffer.isView(value)
-          ? Array.from(value as unknown as Iterable<unknown>)
-          : value
-      }
-    )
-
-    // load the spectrum into NMRium using the custom event
-    await page.evaluate(
-      `
-        window.postMessage({ type: "nmr-wrapper:load", data:{data: ${stringObject},type:"nmrium"}}, '*');
-        `
-    )
-
-    //wait for NMRium process and load spectra
-    await page.locator('text=Loading').waitFor({ state: 'hidden' })
-
-    // take a snapshot for the spectrum
     try {
-      const snapshot = await page.locator('#nmrSVG .container').screenshot()
+      // recreate browser if it has crashed
+      if (!browser.isConnected()) {
+        browser = await launchBrowser();
+      }
 
-      snapshots.push({
-        image: snapshot.toString('base64'),
-        id: spectrum.id,
-      })
+      context = await browser.newContext(playwright.devices['Desktop Chrome HiDPI']);
+      const page = await context.newPage();
+
+      await page.goto(url);
+      await page.locator('text=Loading').waitFor({ state: 'hidden' });
+
+      const stringObject = JSON.stringify(
+        { version, data: { spectra: [{ ...spectrum }] } },
+        (key, value: unknown) => ArrayBuffer.isView(value) ? Array.from(value as unknown as Iterable<unknown>) : value
+      );
+
+      await page.evaluate(`
+        window.postMessage({ type: "nmr-wrapper:load", data: { data: ${stringObject}, type: "nmrium" } }, '*');
+      `);
+
+      await page.locator('text=Loading').waitFor({ state: 'hidden' });
+
+      const snapshot = await page.locator('#nmrSVG .container').screenshot();
+      snapshots.push({ id: spectrum.id, image: snapshot.toString('base64'), error: null });
+
     } catch (e) {
-      console.log(e)
+      snapshots.push({
+        id: spectrum.id,
+        image: null,
+        error: e instanceof Error ? e.message : String(e),
+      });
+
+      // browser crashed — close and recreate for next spectrum
+      await browser.close().catch(() => { });
+      browser = await launchBrowser();
+
+    } finally {
+      await context?.close().catch(() => { });
     }
   }
 
-  await context.close()
-  await browser.close()
-
-  return snapshots
-
+  await browser.close().catch(() => { });
+  return snapshots;
 }
+
 
 interface ProcessSpectraOptions {
   autoDetection: boolean; autoProcessing: boolean;
@@ -124,8 +127,54 @@ function processSpectra(data: NmriumData, options: ProcessSpectraOptions) {
 
 }
 
+function outputResult(result: any, outputPath?: string) {
+  const stream = new JsonStreamStringify(result);
+
+  if (outputPath) {
+    const writeStream = createWriteStream(outputPath);
+    stream.pipe(writeStream);
+    writeStream.on('finish', () => {
+      process.stderr.write(`Output written to: ${outputPath}\n`);
+    });
+  } else {
+    stream.pipe(process.stdout);
+  }
+}
+
+async function processAndSerialize(
+  nmriumState: Partial<NmriumState>,
+  options: FileOptionsArgs
+) {
+  const { s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false, o, r } = options;
+
+  if (nmriumState.data) {
+    processSpectra(nmriumState.data, { autoDetection, autoProcessing });
+  }
+
+  const images: Snapshot[] = enableSnapshot
+    ? await captureSpectraViewAsBase64(nmriumState)
+    : [];
+
+  const { data, version } = core.serializeNmriumState(
+    nmriumState as NmriumState,
+    { includeData: r ? 'rawData' : 'dataSource', },
+
+  );
+
+  // include the meta and info object in case of serialize as dataSource
+  const spectra: any = data?.spectra || [];
+  if (!r) {
+    for (let i = 0; i < spectra.length; i++) {
+      const { info = {}, meta = {} } = nmriumState.data?.spectra[i] || {};
+      spectra[i] = { ...spectra[i], info, meta }
+    }
+  }
+
+  outputResult({ data, version, images }, o);
+}
+
 async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
-  const { u: url, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+  const { u: url } = options;
 
   const { pathname: relativePath, origin: baseURL } = new URL(url)
   const source = {
@@ -138,26 +187,13 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
   }
 
   const [nmriumState] = await core.readFromWebSource(source, parsingOptions);
-  const {
-    data, version
-  } = nmriumState;
 
+  processAndSerialize(nmriumState, options)
 
-  if (data) {
-    processSpectra(data, { autoDetection, autoProcessing });
-  }
-
-  let images: Snapshot[] = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version })
-  }
-
-  return { data, version, images }
 }
 
 async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>) {
-  const { dir: path, s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false } = options;
+  const { dir: path } = options;
 
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
@@ -166,21 +202,33 @@ async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'd
   })
 
   const {
-    nmriumState: { data, version },
+    nmriumState
   } = await core.read(fileCollection, parsingOptions)
 
+  processAndSerialize(nmriumState, options)
 
-  if (data) {
-    processSpectra(data, { autoDetection, autoProcessing })
-  }
-
-  let images: Snapshot[] = []
-
-  if (enableSnapshot) {
-    images = await captureSpectraViewAsBase64({ data, version })
-  }
-
-  return { data, version, images }
 }
 
-export { loadSpectrumFromFilePath, loadSpectrumFromURL }
+
+function parseSpectra(argv: yargs.ArgumentsCamelCase<FileOptionsArgs>
+) {
+
+  const { u, dir } = argv;
+  // Handle parsing the spectra file logic based on argv options
+  if (u) {
+    loadSpectrumFromURL({ u, ...argv });
+  }
+
+
+  if (dir) {
+    loadSpectrumFromFilePath({ dir, ...argv });
+  }
+
+
+
+}
+
+
+
+
+export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra }
