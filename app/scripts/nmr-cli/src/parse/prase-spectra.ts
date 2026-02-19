@@ -23,8 +23,9 @@ const parsingOptions: ParsingOptions = {
 };
 
 interface Snapshot {
-  image: string
-  id: string
+  id: string;
+  image: string | null;
+  error: string | null;
 }
 
 const core = init()
@@ -36,69 +37,68 @@ function generateNMRiumURL() {
   return url.toString()
 }
 
-async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>) {
-  const { data: { spectra } = { spectra: [] }, version } = nmriumState
-  const browser = await playwright.chromium.launch()
-  const context = await browser.newContext(
-    playwright.devices['Desktop Chrome HiDPI']
-  )
-  const page = await context.newPage()
+async function launchBrowser() {
+  return playwright.chromium.launch();
+}
 
-  const url = generateNMRiumURL()
+async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>): Promise<Snapshot[]> {
+  const { data: { spectra } = { spectra: [] }, version } = nmriumState;
 
-  await page.goto(url)
+  if (!spectra?.length) return [];
 
-  await page.locator('text=Loading').waitFor({ state: 'hidden' })
+  const url = generateNMRiumURL();
+  const snapshots: Snapshot[] = [];
+  let browser = await launchBrowser();
 
-  let snapshots: Snapshot[] = []
+  for (const spectrum of spectra) {
+    let context = null;
 
-  for (const spectrum of spectra || []) {
-    const spectrumObject = {
-      version,
-      data: {
-        spectra: [{ ...spectrum }],
-      },
-    }
-
-    // convert typed array to array
-    const stringObject = JSON.stringify(
-      spectrumObject,
-      (key, value: unknown) => {
-        return ArrayBuffer.isView(value)
-          ? Array.from(value as unknown as Iterable<unknown>)
-          : value
-      }
-    )
-
-    // load the spectrum into NMRium using the custom event
-    await page.evaluate(
-      `
-        window.postMessage({ type: "nmr-wrapper:load", data:{data: ${stringObject},type:"nmrium"}}, '*');
-        `
-    )
-
-    //wait for NMRium process and load spectra
-    await page.locator('text=Loading').waitFor({ state: 'hidden' })
-
-    // take a snapshot for the spectrum
     try {
-      const snapshot = await page.locator('#nmrSVG .container').screenshot()
+      // recreate browser if it has crashed
+      if (!browser.isConnected()) {
+        browser = await launchBrowser();
+      }
 
-      snapshots.push({
-        image: snapshot.toString('base64'),
-        id: spectrum.id,
-      })
+      context = await browser.newContext(playwright.devices['Desktop Chrome HiDPI']);
+      const page = await context.newPage();
+
+      await page.goto(url);
+      await page.locator('text=Loading').waitFor({ state: 'hidden' });
+
+      const stringObject = JSON.stringify(
+        { version, data: { spectra: [{ ...spectrum }] } },
+        (key, value: unknown) => ArrayBuffer.isView(value) ? Array.from(value as unknown as Iterable<unknown>) : value
+      );
+
+      await page.evaluate(`
+        window.postMessage({ type: "nmr-wrapper:load", data: { data: ${stringObject}, type: "nmrium" } }, '*');
+      `);
+
+      await page.locator('text=Loading').waitFor({ state: 'hidden' });
+
+      const snapshot = await page.locator('#nmrSVG .container').screenshot();
+      snapshots.push({ id: spectrum.id, image: snapshot.toString('base64'), error: null });
+
     } catch (e) {
-      console.log(e)
+      snapshots.push({
+        id: spectrum.id,
+        image: null,
+        error: e instanceof Error ? e.message : String(e),
+      });
+
+      // browser crashed — close and recreate for next spectrum
+      await browser.close().catch(() => { });
+      browser = await launchBrowser();
+
+    } finally {
+      await context?.close().catch(() => { });
     }
   }
 
-  await context.close()
-  await browser.close()
-
-  return snapshots
-
+  await browser.close().catch(() => { });
+  return snapshots;
 }
+
 
 interface ProcessSpectraOptions {
   autoDetection: boolean; autoProcessing: boolean;
