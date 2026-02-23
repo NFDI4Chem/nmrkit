@@ -13,8 +13,14 @@ import { Filters1DManager, Filters2DManager } from 'nmr-processing'
 import yargs from 'yargs'
 import { createWriteStream } from 'fs'
 import { JsonStreamStringify } from 'json-stream-stringify';
+import { FifoLogger } from 'fifo-logger'
 
 type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+
+function toMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
+
 
 const parsingOptions: ParsingOptions = {
   onLoadProcessing: { autoProcessing: true },
@@ -22,10 +28,10 @@ const parsingOptions: ParsingOptions = {
   experimentalFeatures: true,
 };
 
+
 interface Snapshot {
   id: string;
   image: string | null;
-  error: string | null;
 }
 
 const core = init()
@@ -41,7 +47,7 @@ async function launchBrowser() {
   return playwright.firefox.launch();
 }
 
-async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>): Promise<Snapshot[]> {
+async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>, logger: FifoLogger): Promise<Snapshot[]> {
   const { data: { spectra } = { spectra: [] }, version } = nmriumState;
 
   if (!spectra?.length) return [];
@@ -77,15 +83,10 @@ async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>): Pr
       await page.locator('text=Loading').waitFor({ state: 'hidden' });
 
       const snapshot = await page.locator('#nmrSVG .container').screenshot();
-      snapshots.push({ id: spectrum.id, image: snapshot.toString('base64'), error: null });
+      snapshots.push({ id: spectrum.id, image: snapshot.toString('base64') });
 
     } catch (e) {
-      snapshots.push({
-        id: spectrum.id,
-        image: null,
-        error: e instanceof Error ? e.message : String(e),
-      });
-
+      logger.error({ id: spectrum.id, stage: 'snapshot', details: toMessage(e) }, 'Failed to capture snapshot for spectrum with id: ' + spectrum.id);
       // browser crashed — close and recreate for next spectrum
       await browser.close().catch(() => { });
       browser = await launchBrowser();
@@ -104,22 +105,40 @@ interface ProcessSpectraOptions {
   autoDetection: boolean; autoProcessing: boolean;
 }
 
-function processSpectra(data: NmriumData, options: ProcessSpectraOptions) {
+function processSpectra(data: NmriumData, options: ProcessSpectraOptions, logger: FifoLogger) {
 
   const { autoDetection = false, autoProcessing = false } = options
 
   for (let index = 0; index < data.spectra.length; index++) {
     const inputSpectrum = data.spectra[index]
     const is2D = isSpectrum2D(inputSpectrum);
-    const spectrum = is2D ? initiateDatum2D(inputSpectrum) : initiateDatum1D(inputSpectrum);
+    let spectrum = null;
+    try {
+
+      spectrum = is2D ? initiateDatum2D(inputSpectrum) : initiateDatum1D(inputSpectrum);
+    } catch (e) {
+      logger.error({ id: inputSpectrum.id, stage: 'parsing', details: toMessage(e) }, 'Failed to parse spectrum with id: ' + inputSpectrum.id);
+      continue;
+    }
 
     if (autoProcessing) {
-      isSpectrum2D(spectrum) ? Filters2DManager.reapplyFilters(spectrum) : Filters1DManager.reapplyFilters(spectrum)
+      try {
+
+        isSpectrum2D(spectrum) ? Filters2DManager.reapplyFilters(spectrum) : Filters1DManager.reapplyFilters(spectrum)
+      } catch (e) {
+        logger.error({ id: inputSpectrum.id, stage: 'processing', details: toMessage(e) }, 'Failed to process spectrum with id: ' + inputSpectrum.id);
+      }
     }
 
     if (autoDetection && spectrum.info.isFt) {
-      isSpectrum2D(spectrum) ? detectZones(spectrum) : detectRanges(spectrum);
+      try {
+        isSpectrum2D(spectrum) ? detectZones(spectrum) : detectRanges(spectrum);
+      } catch (e) {
+        logger.error({ id: inputSpectrum.id, stage: 'detection', details: toMessage(e) }, 'Failed to detect spectrum peaks with id: ' + inputSpectrum.id);
+      }
     }
+
+    if (!spectrum) continue;
 
     data.spectra[index] = spectrum;
   }
@@ -143,16 +162,17 @@ function outputResult(result: any, outputPath?: string) {
 
 async function processAndSerialize(
   nmriumState: Partial<NmriumState>,
-  options: FileOptionsArgs
+  options: FileOptionsArgs,
+  logger: FifoLogger
 ) {
   const { s: enableSnapshot = false, p: autoProcessing = false, d: autoDetection = false, o, r } = options;
 
   if (nmriumState.data) {
-    processSpectra(nmriumState.data, { autoDetection, autoProcessing });
+    processSpectra(nmriumState.data, { autoDetection, autoProcessing }, logger);
   }
 
   const images: Snapshot[] = enableSnapshot
-    ? await captureSpectraViewAsBase64(nmriumState)
+    ? await captureSpectraViewAsBase64(nmriumState, logger)
     : [];
 
   const { data, version } = core.serializeNmriumState(
@@ -169,11 +189,11 @@ async function processAndSerialize(
       spectra[i] = { ...spectra[i], info, meta }
     }
   }
-
-  outputResult({ data, version, images }, o);
+  const errors = logger.getLogs({ minLevel: 'error' })
+  outputResult({ data, version, images, errors }, o);
 }
 
-async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
+async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
   const { u: url } = options;
 
   const { pathname: relativePath, origin: baseURL } = new URL(url)
@@ -186,13 +206,14 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>) {
     baseURL,
   }
 
-  const [nmriumState] = await core.readFromWebSource(source, parsingOptions);
 
-  processAndSerialize(nmriumState, options)
+  const [nmriumState] = await core.readFromWebSource(source, { ...parsingOptions, logger });
+
+  processAndSerialize(nmriumState, options, logger)
 
 }
 
-async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>) {
+async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>, logger: FifoLogger) {
   const { dir: path } = options;
 
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
@@ -203,25 +224,26 @@ async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'd
 
   const {
     nmriumState
-  } = await core.read(fileCollection, parsingOptions)
+  } = await core.read(fileCollection, { ...parsingOptions, logger })
 
-  processAndSerialize(nmriumState, options)
+  processAndSerialize(nmriumState, options, logger)
 
 }
 
 
 function parseSpectra(argv: yargs.ArgumentsCamelCase<FileOptionsArgs>
 ) {
+  const logger = new FifoLogger();
 
   const { u, dir } = argv;
   // Handle parsing the spectra file logic based on argv options
   if (u) {
-    loadSpectrumFromURL({ u, ...argv });
+    loadSpectrumFromURL({ u, ...argv }, logger);
   }
 
 
   if (dir) {
-    loadSpectrumFromFilePath({ dir, ...argv });
+    loadSpectrumFromFilePath({ dir, ...argv }, logger);
   }
 
 
