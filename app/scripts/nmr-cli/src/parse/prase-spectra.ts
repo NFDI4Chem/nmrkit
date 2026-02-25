@@ -86,7 +86,7 @@ async function captureSpectraViewAsBase64(nmriumState: Partial<NmriumState>, log
       snapshots.push({ id: spectrum.id, image: snapshot.toString('base64') });
 
     } catch (e) {
-      logger.error({ id: spectrum.id, stage: 'snapshot', details: toMessage(e) }, 'Failed to capture snapshot for spectrum with id: ' + spectrum.id);
+      logger.error({ id: spectrum.id, stage: 'snapshot', details: toMessage(e) }, `Failed to capture snapshot for spectrum: ${spectrum.id}`);
       // browser crashed — close and recreate for next spectrum
       await browser.close().catch(() => { });
       browser = await launchBrowser();
@@ -108,33 +108,36 @@ interface ProcessSpectraOptions {
 function processSpectra(data: NmriumData, options: ProcessSpectraOptions, logger: FifoLogger) {
 
   const { autoDetection = false, autoProcessing = false } = options
-
   for (let index = 0; index < data.spectra.length; index++) {
     const inputSpectrum = data.spectra[index]
     const is2D = isSpectrum2D(inputSpectrum);
     let spectrum = null;
+
     try {
 
       spectrum = is2D ? initiateDatum2D(inputSpectrum) : initiateDatum1D(inputSpectrum);
     } catch (e) {
-      logger.error({ id: inputSpectrum.id, stage: 'parsing', details: toMessage(e) }, 'Failed to parse spectrum with id: ' + inputSpectrum.id);
+      logger.error({ id: inputSpectrum.id, stage: 'parsing', details: toMessage(e) }, `Failed to parse spectrum: ${inputSpectrum.id}`);
       continue;
     }
 
     if (autoProcessing) {
       try {
 
-        isSpectrum2D(spectrum) ? Filters2DManager.reapplyFilters(spectrum) : Filters1DManager.reapplyFilters(spectrum)
+        isSpectrum2D(spectrum) ? Filters2DManager.reapplyFilters(spectrum) : Filters1DManager.reapplyFilters(spectrum);
+        logger.info({ id: inputSpectrum.id, stage: 'processing' }, `Processed spectrum: ${inputSpectrum.id}`);
+
       } catch (e) {
-        logger.error({ id: inputSpectrum.id, stage: 'processing', details: toMessage(e) }, 'Failed to process spectrum with id: ' + inputSpectrum.id);
+        logger.error({ id: inputSpectrum.id, stage: 'processing', details: toMessage(e) }, `Failed to process spectrum: ${inputSpectrum.id}`);
       }
     }
 
     if (autoDetection && spectrum.info.isFt) {
       try {
         isSpectrum2D(spectrum) ? detectZones(spectrum) : detectRanges(spectrum);
+        logger.info({ id: inputSpectrum.id, stage: 'detection' }, `Detected peaks for spectrum: ${inputSpectrum.id}`);
       } catch (e) {
-        logger.error({ id: inputSpectrum.id, stage: 'detection', details: toMessage(e) }, 'Failed to detect spectrum peaks with id: ' + inputSpectrum.id);
+        logger.error({ id: inputSpectrum.id, stage: 'detection', details: toMessage(e) }, `Failed to detect peaks for spectrum: ${inputSpectrum.id}`);
       }
     }
 
@@ -189,8 +192,8 @@ async function processAndSerialize(
       spectra[i] = { ...spectra[i], info, meta }
     }
   }
-  const errors = logger.getLogs({ minLevel: 'error' })
-  outputResult({ data, version, images, errors }, o);
+  const logs = logger.getLogs();
+  outputResult({ nmriumState: { data, version }, images, logs }, o);
 }
 
 async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
