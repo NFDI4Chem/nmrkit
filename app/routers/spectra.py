@@ -238,7 +238,10 @@ class PeaksToNMRiumOptions(BaseModel):
     frequency: Optional[float] = Field(400, description="NMR frequency in MHz")
     nbPoints: Optional[int] = Field(
         131072, description="Number of points for spectrum generation", alias="nb_points")
-
+    from_: Optional[float] = Field(
+        default=None, description="Start of spectrum range", alias="from")
+    to: Optional[float] = Field(
+        default=None, description="End of spectrum range", alias="to")
     model_config = {"populate_by_name": True}
 
 
@@ -608,6 +611,8 @@ async def parse_peaks(request: PeaksToNMRiumRequest):
     | `solvent`   | string | `""`   | NMR solvent                |
     | `frequency` | float  | `400`  | NMR frequency in MHz       |
     | `nb_points` | int    | `131072`| Number of spectrum points |
+    | `from`      | int    |  `undefined` | Start of spectrum range (defaults to first peak value)  |
+    | `to`        | int    |  `undefined` | End of spectrum range (defaults to last peak value)     |
 
     ### Returns
     NMRium-compatible JSON with spectrum data and metadata.
@@ -628,6 +633,10 @@ async def parse_peaks(request: PeaksToNMRiumRequest):
             "frequency": request.options.frequency,
             "nbPoints": request.options.nbPoints,
         }
+    if request.options.from_ is not None:
+        payload["options"]["from"] = request.options.from_
+    if request.options.to is not None:
+        payload["options"]["to"] = request.options.to
 
     try:
         raw_json = run_peaks_to_nmrium_command(payload)
