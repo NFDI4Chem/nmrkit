@@ -210,9 +210,9 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, l
   }
 
 
-  const [nmriumState] = await core.readFromWebSource(source, { ...parsingOptions, logger });
+  const { state } = await core.readFromWebSource(source, { ...parsingOptions, logger });
 
-  processAndSerialize(nmriumState, options, logger)
+  processAndSerialize(state, options, logger)
 
 }
 
@@ -226,10 +226,10 @@ async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'd
   })
 
   const {
-    nmriumState
+    state
   } = await core.read(fileCollection, { ...parsingOptions, logger })
 
-  processAndSerialize(nmriumState, options, logger)
+  processAndSerialize(state, options, logger)
 
 }
 
