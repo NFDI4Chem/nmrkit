@@ -28,12 +28,14 @@ services:
     env_file:
       - ./.env
   nmr-load-save:
-    #build: ./app/scripts/nmr-cli
+    # build: ./app/scripts/nmr-cli
     image: nfdi4chem/nmr-cli:dev-latest
     entrypoint: /bin/sh
     stdin_open: true
     tty: true
     container_name: nmr-converter
+    volumes:
+         - shared-data:/shared 
   nmr-respredict:
     #build: ./app/scripts/nmr-respredict
     image: nfdi4chem/nmr-respredict:dev-latest

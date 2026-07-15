@@ -1,60 +1,120 @@
 
-# This worklflow will perform following actions when the code is pushed to main branch:
-# - Build the latest docker image in main which needs test to pass first.
-# - Push the docker image to Docker Hub under namespace - nfdi4chem with tag:[release_version].
+# This workflow will perform following actions when code is pushed to the main branch:
+# - Run tests and linting checks (can be enabled via needs: test_and_lint)
+# - Build and push nmrKit Docker image with layer caching for faster builds
+# - Conditionally build nmr-cli image only if files in app/scripts/nmr-cli/ changed
+# - Push images to Docker Hub under namespace nfdi4chem with latest tag
+# - Prevent redundant builds using concurrency control
 # 
 # Maintainers:
 #   - name: Nisha Sharma
 #   - email: nisha.sharma@uni-jena.de
 
-name : Prod Build, Test and Publish
+name : Prod Build and Publish
 
+# Runs on manual workflow_dispatch with confirmation
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'DEPLOY' to confirm production deployment"
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-  DOCKER_HUB_USERNAME : ${{ secrets.DOCKER_USERNAME  }}
-  DOCKER_HUB_PASSWORD : ${{ secrets.DOCKER_PASSWORD  }}
-  REPOSITORY_NAME: nmrkit
+  NMRKIT_REPOSITORY_NAME: nmrkit
+  NMR_CLI_REPOSITORY_NAME: nmr-cli
   REPOSITORY_NAMESPACE: nfdi4chem
+  RELEASE_TAG: latest
 
 jobs:
-  push_to_registry:
-    name: Push Docker image to Docker Hub
+  # test_and_lint:
+  #   uses: NFDI4Chem/nmrkit/.github/workflows/test.yml@main
+
+  # Guard: confirm input and authorize actor
+  guard:
+    name: Access control and confirmation
     runs-on: ubuntu-latest
     steps:
+      - name: Validate actor and confirmation
+        shell: bash
+        run: |
+          echo "Actor: ${GITHUB_ACTOR}"
+          # Confirm input (workflow_dispatch)
+          if [[ "${{ github.event.inputs.confirm }}" != "DEPLOY" ]]; then
+            echo "Confirmation token mismatch. Expected 'DEPLOY'."
+            exit 1
+          fi
+
+          # Authorize actor (comma/space separated list in secret)
+          AUTHORIZED_ACTORS="${{ secrets.PROD_DEPLOY_AUTHORIZED_ACTORS }}"
+          allowed=0
+          for u in ${AUTHORIZED_ACTORS//,/ }; do
+            if [[ "${u,,}" == "${GITHUB_ACTOR,,}" ]]; then
+              allowed=1
+              break
+            fi
+          done
+          if [[ $allowed -ne 1 ]]; then
+            echo "User '${GITHUB_ACTOR}' is not authorized to trigger this workflow."
+            exit 1
+          fi
+          echo "Authorization check passed."
+
+  build_and_push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    needs: guard
+    steps:
+      # Clone repository code to runner
       - name: Check out the repo
         uses: actions/checkout@v4
-
-      #Fetch Latest release
-      - name: Fetch latest release
-        id: fetch-latest-release
-        uses: InsonusK/get-latest-release@v1.0.1
-        with:
-          myToken: ${{ github.token }}
-          exclude_types: "draft"
-          view_top: 10
-      - name: "Print release name"
-        run: |
-          echo "tag_name: ${{ steps.fetch-latest-release.outputs.tag_name }}"
-
-      #Login to Docker Hub
+      
+      # Enable advanced Docker build features (required for caching)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Authenticate with Docker Hub for image push access
       - name: Log in to Docker Hub
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_USERNAME  }}
-          password: ${{ env.DOCKER_HUB_PASSWORD  }}
-
-      #Build and push Docker image      
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      # Detect changes in nmr-cli folder to skip unnecessary builds
+      - name: Check for file changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            nmr-cli:
+              - 'app/scripts/nmr-cli/**'
+      
+      # Build main nmrKit image with registry caching for faster builds
+      - name: Build and push nmrKit Docker image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
-          build-args: |
-            RELEASE_VERSION=${{ steps.fetch-latest-release.outputs.tag_name }}
-          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAME }}:${{ steps.fetch-latest-release.outputs.tag_name }}
-          username: ${{ env.DOCKER_HUB_USERNAME  }}
-          password: ${{ env.DOCKER_HUB_PASSWORD  }}
+          build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
+          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
+
+      # Build nmr-cli image only if files in app/scripts/nmr-cli/ changed
+      - name: Build and push nmr-cli Docker image
+        if: steps.changes.outputs.nmr-cli == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app/scripts/nmr-cli/
+          file: ./app/scripts/nmr-cli/Dockerfile
+          push: true
+          build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
+          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
