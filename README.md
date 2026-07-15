@@ -24,7 +24,7 @@ Key Features:
 🔄 Format Conversion: Effortlessly convert NMR data between various file formats.
 
 🔗 Explore the documentation and get started: https://nfdi4chem.github.io/nmrkit
-API Reference - https://dev.nmrkit.nmrxiv.org/latest/docs
+API Reference (Scalar) - https://dev.nmrkit.nmrxiv.org/latest/docs
 📢 Found a bug or have a feature request? We'd love to hear from you! Please open an issue: [https://github.com/NFDI4Chem/nmrkit/issues]
 
 Happy NMR exploring! 🧪🌟"

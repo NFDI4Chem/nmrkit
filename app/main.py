@@ -33,6 +33,7 @@ A Python-based microservice for **storing**, **parsing**, **converting**, and
 ### Links
 
 * [Documentation](https://nfdi4chem.github.io/nmrkit)
+* [API Reference (Scalar)](https://dev.nmrkit.nmrxiv.org/latest/docs)
 * [Source Code](https://github.com/NFDI4Chem/nmrkit)
 """
 
