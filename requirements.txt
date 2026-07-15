@@ -1,4 +1,5 @@
 fastapi
+scalar-fastapi
 uvicorn
 pydantic
 rdkit-pypi>=2022.09.4
