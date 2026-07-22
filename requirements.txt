@@ -1,6 +1,7 @@
-fastapi
+fastapi<0.116
 uvicorn
 pydantic
+numpy<2
 rdkit-pypi>=2022.09.4
 HOSE_code_generator @ git+https://github.com/Ratsemaat/HOSE_code_generator
 jpype1==1.4.1
