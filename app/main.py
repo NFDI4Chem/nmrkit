@@ -9,6 +9,7 @@ from .routers import spectra, converter, predict
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import config, tasks
+from app.core.scalar_docs import configure_scalar_docs
 
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.schemas import HealthCheck
@@ -32,6 +33,7 @@ A Python-based microservice for **storing**, **parsing**, **converting**, and
 ### Links
 
 * [Documentation](https://nfdi4chem.github.io/nmrkit)
+* [API Reference (Scalar)](https://dev.nmrkit.nmrxiv.org/latest/docs)
 * [Source Code](https://github.com/NFDI4Chem/nmrkit)
 """
 
@@ -101,6 +103,8 @@ app = VersionedFastAPI(
     version_format="{major}",
     prefix_format="/v{major}",
     enable_latest=True,
+    docs_url=None,
+    redoc_url=None,
     description=DESCRIPTION,
     terms_of_service="https://nfdi4chem.github.io/nmrkit",
     contact={
@@ -114,6 +118,7 @@ app = VersionedFastAPI(
     },
     openapi_tags=tags_metadata,
 )
+configure_scalar_docs(app)
 
 Instrumentator().instrument(app).expose(app)
 

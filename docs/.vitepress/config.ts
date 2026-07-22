@@ -16,7 +16,8 @@ export default defineConfigWithTheme<ThemeConfig>({
         },
         nav: [
             { text: 'Home', link: '/nmrkit/introduction' },
-            { text: 'API', link: 'https://dev.nmrkit.nmrxiv.org/latest/docs' },
+            { text: 'API Reference', link: '/getting-started/api-reference' },
+            { text: 'Scalar (dev)', link: 'https://dev.nmrkit.nmrxiv.org/latest/docs' },
             { text: 'GitHub', link: 'https://github.com/NFDI4Chem/nmrkit' }
         ],
         sidebar: [
@@ -24,27 +25,37 @@ export default defineConfigWithTheme<ThemeConfig>({
               text: 'Getting Started',
               items: [
                 { text: 'Introduction', link: '/introduction' },
-                { text: 'Versions', link: '/getting-started/versions' },
+                { text: 'API Reference', link: '/getting-started/api-reference' },
                 { text: 'Architecture', link: '/getting-started/architecture' },
+                { text: 'Versions', link: '/getting-started/versions' },
               ]
             },
             {
               text: 'Deployment',
               items: [
-                //{ text: 'Public API', link: '/public-api' },
+                { text: 'Overview', link: '/deployment/overview' },
                 { text: 'Docker', link: '/deployment/docker' },
                 { text: 'Cluster Deployment (K8S)', link: '/deployment/cluster-deployment' }
               ]
             },
             {
+              text: 'Services',
+              items: [
+                { text: 'nmr-cli', link: '/services/nmr-cli' },
+                { text: 'nmr-respredict', link: '/services/nmr-respredict' },
+              ]
+            },
+            {
               text: 'Modules',
               items: [
-                { text: 'Registration', link: '/modules/registration' },
-                { text: 'Search', link: '/modules/search' },
-                { text: 'Prediction', link: '/modules/prediction' },
+                { text: 'Chemistry', link: '/modules/chemistry' },
                 { text: 'Spectra', link: '/modules/spectra' },
-                { text: 'Training', link: '/modules/training' },
-                { text: 'Validation', link: 'modules/validation' },
+                { text: 'Converter', link: '/modules/converter' },
+                { text: 'Prediction', link: '/modules/prediction' },
+                { text: 'Registration', link: '/modules/registration' },
+                { text: 'Search (planned)', link: '/modules/search' },
+                { text: 'Training (planned)', link: '/modules/training' },
+                { text: 'Validation (planned)', link: '/modules/validation' },
               ]
             },
             {
