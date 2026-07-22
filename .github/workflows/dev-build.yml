@@ -9,7 +9,7 @@
 #   - name: Nisha Sharma
 #   - email: nisha.sharma@uni-jena.de
 
-name: Prod Build and Publish to Dev
+name: Build and Publish to Dev
 
 on:
   push:
