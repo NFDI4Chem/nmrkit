@@ -483,7 +483,7 @@ def get_health() -> HealthCheck:
         "| **nmrshift** | proton, carbon | ~5-10s |\n"
         "| **nmrdb.org** | proton, carbon, cosy, hsqc, hmbc | ~30-60s |\n\n"
         "> **Note:** nmrdb.org predictions can take 30-60 seconds. "
-        "Consider using curl or Postman instead of the Swagger UI for long-running requests."
+        "Consider using curl or Postman instead of the API docs for long-running requests."
     ),
     response_description="Predicted spectra in NMRium-compatible JSON format",
     status_code=status.HTTP_200_OK,
@@ -499,7 +499,7 @@ async def predict_from_structure(request: PredictRequest):
     """
     ## Predict NMR spectra from a MOL string
 
-    **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not Swagger.
+    **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not the API docs.
 
     ### Engines
 
@@ -564,7 +564,7 @@ async def predict_from_structure(request: PredictRequest):
         "| **nmrshift** | proton, carbon | ~5-10s |\n"
         "| **nmrdb.org** | proton, carbon, cosy, hsqc, hmbc | ~30-60s |\n\n"
         "> **Note:** nmrdb.org predictions can take 30-60 seconds. "
-        "Consider using curl or Postman instead of the Swagger UI for long-running requests."
+        "Consider using curl or Postman instead of the API docs for long-running requests."
     ),
     response_description="Predicted spectra in NMRium-compatible JSON format",
     status_code=status.HTTP_200_OK,
@@ -597,7 +597,7 @@ async def predict_from_file(
 
     Upload a MOL file and pass engine options as a JSON string in the `request` field.
 
-    > **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not Swagger.
+    > **Note:** nmrdb.org predictions take 30-60s. Use curl/Postman, not the API docs.
 
     ### nmrshift example `request` field
     ```json

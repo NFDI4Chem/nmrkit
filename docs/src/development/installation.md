@@ -135,13 +135,27 @@ networks:
     name: nmrkit_vpc
 ```
 
-4. Run Docker Compose: Execute the command ```docker-compose up -d``` to start the containers defined in the Compose file.
+4. Run Docker Compose: Execute the command `docker compose up -d` to start the containers.
 
 5. Wait for the containers to start: Docker Compose will start the containers and display their logs in the terminal or command prompt.
 
-Unicorn will start the app and display the server address (usually `http://localhost:80`) and Grafana dashboard can be accessed at `http://localhost:3000`
+The API will be available at http://localhost:8080 and the Scalar API reference at http://localhost:8080/latest/docs. Grafana dashboard can be accessed at http://localhost:3000.
 
-You may update the docker-compose file to disable or add additional services but by default, the docker-compose file shipped with the project has the web (nmrkit FAST API app), [rdkit-cartridge-debian](https://hub.docker.com/r/informaticsmatters/rdkit-cartridge-debian), [Prometheus](https://prometheus.io/img/introduction/overview/) and [Grafana](https://prometheus.io/img/introduction/overview/) (logging and visualisation of metrics), [Minio](https://min.io/img/minio/linux/index.html), [Redis](https://redis.io/img/) services.
+### Services started by Docker Compose
+
+| Service | Container | Purpose |
+|---------|-----------|---------|
+| `web` | `nmrkit-api` | FastAPI application |
+| `nmr-load-save` | `nmr-converter` | nmr-cli for spectra parsing and prediction |
+| `nmr-respredict` | `nmr-respredict` | Residual NMR prediction (future integration) |
+| `pgsql` | — | PostgreSQL with RDKit cartridge |
+| `redis` | — | Cache |
+| `minio` | — | Object storage |
+| `prometheus` / `grafana` | — | Metrics and dashboards |
+
+Copy `env.template` to `.env` and adjust database credentials before starting.
+
+See the [Deployment Overview](/deployment/overview) and [nmr-cli service](/services/nmr-cli) documentation for details.
 
 ## Standalone
 
