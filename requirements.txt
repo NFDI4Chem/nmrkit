@@ -1,4 +1,4 @@
-fastapi
+fastapi<0.116
 uvicorn
 pydantic
 numpy<2
