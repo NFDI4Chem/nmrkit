@@ -88,8 +88,13 @@ app.include_router(spectra.router)
 app.include_router(converter.router)
 app.include_router(predict.router)
 
-app.add_event_handler("startup", tasks.create_start_app_handler(app))
-app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
+if hasattr(app, "add_event_handler"):
+    app.add_event_handler("startup", tasks.create_start_app_handler(app))
+    app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
+else:
+    # FastAPI versions that removed direct event registration still support router-level handlers.
+    app.router.add_event_handler("startup", tasks.create_start_app_handler(app))
+    app.router.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
 
 app = VersionedFastAPI(
     app,
