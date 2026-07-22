@@ -8,6 +8,7 @@ export default defineConfigWithTheme<ThemeConfig>({
     description: 'A collection of powerful microservices designed to simplify your NMR data processing and analysis',
     base: '/nmrkit/',
     cleanUrls: false,
+    ignoreDeadLinks: [/^http:\/\/localhost(?::\d+)?(?:\/.*)?$/],
     srcDir: 'src',
     themeConfig: {
         logo: {
