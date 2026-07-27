@@ -38,7 +38,6 @@ def get_health() -> HealthCheck:
 
 @router.get(
     "/hosecode",
-    tags=["chem"],
     summary="Generate HOSE codes for a molecule",
     description=(
         "Generate **Hierarchically Ordered Spherical Environment (HOSE)** codes "

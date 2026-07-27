@@ -35,7 +35,6 @@ def get_health() -> HealthCheck:
 
 @router.get(
     "/spectra",
-    tags=["converter"],
     summary="Convert NMR raw data to NMRium JSON",
     description=(
         "Fetch NMR raw data from a remote URL and convert it into "

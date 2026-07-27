@@ -329,7 +329,6 @@ def run_peaks_to_nmrium_command(payload: dict) -> str:
 
 @router.post(
     "/parse/file",
-    tags=["spectra"],
     summary="Parse spectra from an uploaded file",
     description=(
         "Upload an NMR spectra file (JCAMP-DX, Bruker, etc.) and parse it into "
@@ -425,7 +424,6 @@ async def parse_spectra_from_file(
 
 @router.post(
     "/parse/url",
-    tags=["spectra"],
     summary="Parse spectra from a remote URL",
     description=(
         "Provide a URL pointing to an NMR spectra file and parse it into structured "
@@ -478,7 +476,6 @@ async def parse_spectra_from_url(request: UrlParseRequest):
 
 @router.post(
     "/parse/publication-string",
-    tags=["spectra"],
     summary="Resurrect NMR spectrum from an ACS publication string",
     description=(
         "Parse an ACS-style NMR publication string and resurrect it into a full "
@@ -558,7 +555,6 @@ async def parse_publication_string(
 
 @router.post(
     "/parse/peaks",
-    tags=["spectra"],
     summary="Convert a peak list to an NMRium-compatible spectrum",
     description=(
         "Convert a list of NMR peaks (chemical shifts with optional intensity and "
