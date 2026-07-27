@@ -48,7 +48,6 @@ def get_health() -> HealthCheck:
 
 @router.post(
     "/init",
-    tags=["registration"],
     summary="Initialize the registration database",
     description=(
         "Initialize (or re-initialize) the molecule registration database. "
@@ -91,7 +90,6 @@ async def initialise_database(
 
 @router.post(
     "/register",
-    tags=["registration"],
     summary="Register new molecules",
     description=(
         "Register one or more molecules in the database. Accepts SMILES strings "
@@ -199,7 +197,6 @@ async def register_compounds(
 
 @router.get(
     "/query",
-    tags=["registration"],
     summary="Query if a molecule is already registered",
     description=(
         "Check whether a molecule (given as a SMILES string) has already been "
@@ -249,7 +246,6 @@ async def query_compounds(
 
 @router.post(
     "/retrieve",
-    tags=["registration"],
     summary="Retrieve registered molecules by ID",
     description=(
         "Retrieve one or more registered molecules by their registry IDs (molregnos). "

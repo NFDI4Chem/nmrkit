@@ -472,7 +472,6 @@ def get_health() -> HealthCheck:
 
 @router.post(
     "/",
-    tags=["predict"],
     summary="Predict NMR spectra from a MOL string",
     description=(
         "Submit a molecular structure as a MOL block string and predict NMR spectra "
@@ -553,7 +552,6 @@ async def predict_from_structure(request: PredictRequest):
 
 @router.post(
     "/file",
-    tags=["predict"],
     summary="Predict NMR spectra from an uploaded MOL file",
     description=(
         "Upload a MOL file and predict NMR spectra using one of the supported engines. "
