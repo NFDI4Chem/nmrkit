@@ -118,7 +118,7 @@ def run_command(
         result = subprocess.run(
             ["docker", "exec", NMR_CLI_CONTAINER] + cmd,
             capture_output=True,
-            timeout=120,
+            timeout=600,
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(
