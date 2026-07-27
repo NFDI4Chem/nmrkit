@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/NFDI4Chem/nmrkit/compare/v1.1.0...v1.1.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* scalar route fix ([9354daa](https://github.com/NFDI4Chem/nmrkit/commit/9354daa606766de31bfad12bde3dffcdd5c9762c))
+* **scalar:** remove duplicate OpenAPI tags from endpoint schemas ([#125](https://github.com/NFDI4Chem/nmrkit/issues/125)) ([31c5027](https://github.com/NFDI4Chem/nmrkit/commit/31c50278bcd1ec2799b10e2c7644623d129a4eb8))
+* **spectra:** increase spectra api execution timeout to 10 minutes ([#126](https://github.com/NFDI4Chem/nmrkit/issues/126)) ([52d0a12](https://github.com/NFDI4Chem/nmrkit/commit/52d0a12b3ee358198ddeaaaa2df73285175f2cb5))
+
 ## [1.1.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.0.0...v1.1.0) (2026-07-22)
 
 
