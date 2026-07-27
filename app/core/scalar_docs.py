@@ -9,8 +9,7 @@ def _remove_doc_routes(fastapi_app: FastAPI) -> None:
         route
         for route in fastapi_app.router.routes
         if not (
-            isinstance(route, APIRoute)
-            and route.path in ("/docs", "/redoc")
+            getattr(route, "path", None) in ("/docs", "/redoc")
         )
     ]
     fastapi_app.docs_url = None
