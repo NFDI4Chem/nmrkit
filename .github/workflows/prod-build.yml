@@ -73,6 +73,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      # Enable multi-architecture builds via QEMU emulation
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       # Enable advanced Docker build features (required for caching)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -100,6 +104,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
           tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
           cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
