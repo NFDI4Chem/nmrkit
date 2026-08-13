@@ -1,8 +1,8 @@
 # This workflow will perform following actions when code is pushed to the main branch:
 # - Run tests and linting checks (can be enabled via needs: test_and_lint)
-# - Build and push nmrKit Docker image with layer caching for faster builds
+# - Build and push nmrKit Docker image with latest and release-version tags
 # - Conditionally build nmr-cli image only if files in app/scripts/nmr-cli/ changed
-# - Push images to Docker Hub under namespace nfdi4chem with latest tag
+# - Push images to Docker Hub under namespace nfdi4chem with latest tags (plus release-version tags)
 # - Prevent redundant builds using concurrency control
 #
 # Maintainers:
@@ -93,6 +93,14 @@ jobs:
             nmr-cli:
               - 'app/scripts/nmr-cli/**'
 
+      # Fetch the latest GitHub release tag for versioned Docker tags
+      - name: Get latest release version
+        id: release_version
+        uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       # Build main nmrKit image with registry caching for faster builds
       - name: Build and push nmrKit Docker image
         uses: docker/build-push-action@v6
@@ -100,8 +108,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
-          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.release }}
+          tags: |
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ steps.release_version.outputs.release }}
           cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
 
@@ -113,7 +123,9 @@ jobs:
           context: ./app/scripts/nmr-cli/
           file: ./app/scripts/nmr-cli/Dockerfile
           push: true
-          build-args: RELEASE_VERSION=${{ env.RELEASE_TAG }}
-          tags: ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.release }}
+          tags: |
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ steps.release_version.outputs.release }}
           cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
