@@ -14,8 +14,9 @@ WORKDIR /app
 ENV BASE_NMRIUM_URL=https://nmriumdev.nmrxiv.org/
 ENV NMR_PREDICTION_URL=https://nmrshiftdb.nmr.uni-koeln.de/NmrshiftdbServlet/nmrshiftdbaction/quickcheck
 
-# V8 defaults to a ~4 GB old-space cap; large 2D spectra exceed it.
-ENV NODE_OPTIONS="--max-old-space-size=12288"
+# Override at runtime with: docker run -e NODE_OPTIONS="--max-old-space-size=<MB>" ...
+ARG NODE_MAX_OLD_SPACE_SIZE=12288
+ENV NODE_OPTIONS=--max-old-space-size=${NODE_MAX_OLD_SPACE_SIZE}
 
 # Install Java (OpenJDK 17 for Ubuntu Noble)
 RUN apt-get update && \
