@@ -14,6 +14,9 @@ WORKDIR /app
 ENV BASE_NMRIUM_URL=https://nmriumdev.nmrxiv.org/
 ENV NMR_PREDICTION_URL=https://nmrshiftdb.nmr.uni-koeln.de/NmrshiftdbServlet/nmrshiftdbaction/quickcheck
 
+# V8 defaults to a ~4 GB old-space cap; large 2D spectra exceed it.
+ENV NODE_OPTIONS="--max-old-space-size=12288"
+
 # Install Java (OpenJDK 17 for Ubuntu Noble)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-17-jre && \
