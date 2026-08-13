@@ -93,18 +93,13 @@ jobs:
             nmr-cli:
               - 'app/scripts/nmr-cli/**'
 
-      # Read release version from app config for versioned Docker tags
-      - name: Read project release version
+      # Fetch the latest GitHub release tag for versioned Docker tags
+      - name: Get latest release version
         id: release_version
-        shell: bash
-        run: |
-          PROJECT_VERSION=$(sed -nE 's/^VERSION\s*=\s*"([^"]+)"/\1/p' app/core/config.py | head -n1)
-          if [[ -z "$PROJECT_VERSION" ]]; then
-            echo "Unable to read VERSION from app/core/config.py"
-            exit 1
-          fi
-          echo "project_version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected release version: $PROJECT_VERSION"
+        uses: pozetroninc/github-action-get-latest-release@v0.8.0
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Build main nmrKit image with registry caching for faster builds
       - name: Build and push nmrKit Docker image
@@ -113,10 +108,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.project_version }}
+          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.release }}
           tags: |
             ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ steps.release_version.outputs.project_version }}
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:${{ steps.release_version.outputs.release }}
           cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMRKIT_REPOSITORY_NAME }}:buildcache,mode=max
 
@@ -128,9 +123,9 @@ jobs:
           context: ./app/scripts/nmr-cli/
           file: ./app/scripts/nmr-cli/Dockerfile
           push: true
-          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.project_version }}
+          build-args: RELEASE_VERSION=${{ steps.release_version.outputs.release }}
           tags: |
             ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ env.RELEASE_TAG }}
-            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ steps.release_version.outputs.project_version }}
+            ${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:${{ steps.release_version.outputs.release }}
           cache-from: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache
           cache-to: type=registry,ref=${{ env.REPOSITORY_NAMESPACE }}/${{ env.NMR_CLI_REPOSITORY_NAME }}:buildcache,mode=max
