@@ -1,33 +1,5 @@
 # Changelog
 
-## [1.1.1](https://github.com/NFDI4Chem/nmrkit/compare/v1.1.0...v1.1.1) (2026-07-27)
-
-
-### Bug Fixes
-
-* scalar route fix ([9354daa](https://github.com/NFDI4Chem/nmrkit/commit/9354daa606766de31bfad12bde3dffcdd5c9762c))
-* **scalar:** remove duplicate OpenAPI tags from endpoint schemas ([#125](https://github.com/NFDI4Chem/nmrkit/issues/125)) ([31c5027](https://github.com/NFDI4Chem/nmrkit/commit/31c50278bcd1ec2799b10e2c7644623d129a4eb8))
-* **spectra:** increase spectra api execution timeout to 10 minutes ([#126](https://github.com/NFDI4Chem/nmrkit/issues/126)) ([52d0a12](https://github.com/NFDI4Chem/nmrkit/commit/52d0a12b3ee358198ddeaaaa2df73285175f2cb5))
-
-## [1.1.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.0.0...v1.1.0) (2026-07-22)
-
-
-### Features
-
-* improve prediction with molfile ([ab20577](https://github.com/NFDI4Chem/nmrkit/commit/ab20577306584b3d0cf7f5cec64dc70125a150b5))
-
-
-### Bug Fixes
-
-* add scalar-fastapi to requirements.txt for scalar API support ([#119](https://github.com/NFDI4Chem/nmrkit/issues/119)) ([965abd7](https://github.com/NFDI4Chem/nmrkit/commit/965abd71c719911e77672100bd97bd12eba99543))
-* numpy version to &lt;2 to resolve compatibility issues ([#117](https://github.com/NFDI4Chem/nmrkit/issues/117)) ([4c5881a](https://github.com/NFDI4Chem/nmrkit/commit/4c5881aa1ff2a518c1f56674d90114d0ff513a3c))
-
-
-### Documentation
-
-* ignore dead links in localhost for vitepress config ([e78d7cf](https://github.com/NFDI4Chem/nmrkit/commit/e78d7cfbd83707d567ac66012f02c28bdde6ecf3))
-* migrate to Scalar and complete documentation update ([#114](https://github.com/NFDI4Chem/nmrkit/issues/114)) ([34b2195](https://github.com/NFDI4Chem/nmrkit/commit/34b2195718d0e68d813b354954ed932b7c89c898))
-
 ## [0.2.0](https://github.com/NFDI4Chem/nmrkit/compare/v0.1.0...v0.2.0) (2026-07-15)
 
 

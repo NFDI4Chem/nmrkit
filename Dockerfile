@@ -1,4 +1,5 @@
 FROM continuumio/miniconda3:24.1.2-0 AS nmrkit-ms
+ARG TARGETARCH=amd64
 
 ENV PYTHON_VERSION=3.10
 ENV OPENBABEL_VERSION=v3.1
@@ -30,8 +31,7 @@ RUN pip3 install rdkit
 
 RUN python3 -m pip install -U pip
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
-RUN export JAVA_HOME
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}/
 
 RUN git clone "https://github.com/rinikerlab/lightweight-registration.git" lwreg
 RUN chmod +x lwreg
