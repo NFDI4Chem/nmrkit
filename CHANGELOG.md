@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.1.1...v1.2.0) (2026-08-19)
+
+
+### Features
+
+* update NMRium core packages to match the latest wrapper production version ([4e683a5](https://github.com/NFDI4Chem/nmrkit/commit/4e683a580441e3f3b39565f0b588ed4aee86b227))
+
+
+### Bug Fixes
+
+* **docker:** add multi-arch (amd64/arm64) Docker build support ([#130](https://github.com/NFDI4Chem/nmrkit/issues/130)) ([d095b6d](https://github.com/NFDI4Chem/nmrkit/commit/d095b6d14111a4e482588b0c4f2450149da5c3ff))
+* Increase memory limit for Node.js in Docker containers to handle… ([#132](https://github.com/NFDI4Chem/nmrkit/issues/132)) ([5fd0705](https://github.com/NFDI4Chem/nmrkit/commit/5fd070565f86ebc3430045324bfdf2b21bbf4bf9))
+
 ## [0.2.0](https://github.com/NFDI4Chem/nmrkit/compare/v0.1.0...v0.2.0) (2026-07-15)
 
 
