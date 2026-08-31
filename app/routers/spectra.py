@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 import io
 from app.schemas import HealthCheck
 from pydantic import BaseModel, HttpUrl, Field
-from typing import Optional
+from typing import Optional, List
 import subprocess
 import tempfile
 import os
@@ -50,6 +50,10 @@ class UrlParseRequest(BaseModel):
     )
     raw_data: bool = Field(
         False, description="Include raw data in the output (default: data source)")
+    include: Optional[List[str]] = Field(
+        None, description="Only include files matching pattern(s) (glob/regex string)")
+    exclude: Optional[List[str]] = Field(
+        None, description="Exclude files matching pattern(s) (glob/regex string)")
 
     model_config = {
         "json_schema_extra": {
@@ -95,6 +99,8 @@ def run_command(
     auto_processing: bool = False,
     auto_detection: bool = False,
     raw_data: bool = False,
+    include: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
 ) -> StreamingResponse:
     """Execute nmr-cli parse-spectra command in Docker container."""
 
@@ -113,6 +119,12 @@ def run_command(
         cmd.append("-d")
     if raw_data:
         cmd.append("-r")
+    if include:
+        cmd.append("--include")
+        cmd.extend(include)
+    if exclude:
+        cmd.append("--exclude")
+        cmd.extend(exclude)
 
     try:
         result = subprocess.run(
@@ -362,7 +374,11 @@ async def parse_spectra_from_file(
         description="Enable ranges and zones automatic detection",
     ),
     raw_data: bool = Form(
-        False, description="Include raw data in the output (default: data source references)")
+        False, description="Include raw data in the output (default: data source references)"),
+    include: Optional[List[str]] = Form(
+        None, description="Only include files matching pattern(s) (glob/regex string)"),
+    exclude: Optional[List[str]] = Form(
+        None, description="Exclude files matching pattern(s) (glob/regex string)"),
 ):
     """
     ## Parse spectra from an uploaded file
@@ -376,6 +392,8 @@ async def parse_spectra_from_file(
     | `auto_processing` | Automatically process FID → FT spectra |
     | `auto_detection` | Automatically detect ranges and zones |
     | `raw_data` | Include raw data in the output (default: data source) |
+    | `include` | Only include files matching pattern(s) |
+    | `exclude` | Exclude files matching pattern(s) |
     ### Returns
     Parsed spectra data in NMRium-compatible JSON format.
     """
@@ -405,6 +423,8 @@ async def parse_spectra_from_file(
             auto_processing=auto_processing,
             auto_detection=auto_detection,
             raw_data=raw_data,
+            include=include,
+            exclude=exclude,
         )
 
     except HTTPException:
@@ -452,6 +472,8 @@ async def parse_spectra_from_url(request: UrlParseRequest):
     | `auto_processing` | Automatically process FID → FT spectra |
     | `auto_detection` | Automatically detect ranges and zones |
     | `raw_data` | Include raw data in the output (default: data source) |
+    | `include` | Only include files matching pattern(s) |
+    | `exclude` | Exclude files matching pattern(s) |
 
     ### Returns
     Parsed spectra data in NMRium-compatible JSON format.
@@ -463,6 +485,8 @@ async def parse_spectra_from_url(request: UrlParseRequest):
             auto_processing=request.auto_processing,
             auto_detection=request.auto_detection,
             raw_data=request.raw_data,
+            include=request.include,
+            exclude=request.exclude,
         )
 
     except HTTPException:
