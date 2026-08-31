@@ -25,6 +25,7 @@
     "lodash.merge": "^4.6.2",
     "mf-parser": "^3.7.1",
     "ml-spectra-processing": "^14.22.0",
+    "nmr-correlation": "^3.0.2",
     "nmr-processing": "^22.5.2",
     "openchemlib": "^9.20.0",
     "playwright": "1.58.2",

@@ -4,6 +4,7 @@ import { parseSpectra } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
 import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
 import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
+import { generateCorrelationData } from './correlation'
 import { hideBin } from 'yargs/helpers'
 import { parsePredictionCommand } from './prediction'
 import { readFileSync } from 'fs'
@@ -15,8 +16,15 @@ Usage: nmr-cli  <command> [options]
 Commands:
   parse-spectra                Parse a spectra file to NMRium file
   parse-publication-string     resurrect spectrum from the publication string 
-  predict                      Predict spectrum from Mol 
+  predict                      Predict spectrum from Mol
   peaks-to-nmrium              Convert a peak list to NMRium object
+  correlation                  Build correlation data from NMR spectra fetched from a URL
+
+Options for 'correlation' command:
+  -u, --url                Spectra ZIP file URL
+      --mf                Molecular formula
+      --tolerance-h       H tolerance override (default: 0.02)
+      --tolerance-c       C tolerance override (default: 0.25)
 
 Options for 'parse-spectra' command:
   -u, --url                File URL  
@@ -226,12 +234,61 @@ const peaksToNMRiumCommand: CommandModule = {
   },
 }
 
+// Define the correlation command
+const correlationCommand: CommandModule = {
+  command: ['correlation', 'corr'],
+  describe: 'Build correlation data from NMR spectra fetched from a URL',
+  builder: yargs => {
+    return yargs.options({
+      u: {
+        alias: 'url',
+        describe: 'Spectra ZIP file URL',
+        type: 'string',
+        demandOption: true,
+        nargs: 1,
+      },
+      mf: {
+        describe: 'Molecular formula',
+        type: 'string',
+        demandOption: true,
+        nargs: 1,
+      },
+      'tolerance-h': {
+        describe: 'H tolerance override (default: 0.02)',
+        type: 'number',
+      },
+      'tolerance-c': {
+        describe: 'C tolerance override (default: 0.25)',
+        type: 'number',
+      },
+    })
+  },
+  handler: async argv => {
+    try {
+      const result = await generateCorrelationData({
+        url: argv.u as string,
+        mf: argv.mf as string,
+        toleranceH: argv['tolerance-h'] as number | undefined,
+        toleranceC: argv['tolerance-c'] as number | undefined,
+      })
+      console.log(JSON.stringify(result))
+    } catch (error) {
+      console.error(
+        'Error:',
+        error instanceof Error ? error.message : String(error),
+      )
+      process.exit(1)
+    }
+  },
+}
+
 yargs(hideBin(process.argv))
   .usage(usageMessage)
   .command(parseFileCommand)
   .command(parsePublicationCommand)
   .command(parsePredictionCommand)
   .command(peaksToNMRiumCommand)
+  .command(correlationCommand)
   .showHelpOnFail(true)
   .help()
   .parse()
