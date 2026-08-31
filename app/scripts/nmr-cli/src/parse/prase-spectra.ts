@@ -209,23 +209,24 @@ function buildWebSource(url: string) {
 }
 
 async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
-  const { u: url } = options;
+  const { u: url, include, exclude } = options;
 
   const source = buildWebSource(url)
 
-  const { state } = await core.readFromWebSource(source, { ...parsingOptions, logger });
+  const { state } = await core.readFromWebSource(source, { ...parsingOptions, fileFilter: { include, exclude }, logger });
 
   processAndSerialize(state, options, logger)
 
 }
 
 async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>, logger: FifoLogger) {
-  const { dir: path } = options;
+  const { dir: path, include, exclude } = options;
 
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
   const fileCollection = await FileCollection.fromPath(dirPath, {
     unzip: { zipExtensions: ['zip', 'nmredata'] },
+    filter: { include, exclude },
   })
 
   const {

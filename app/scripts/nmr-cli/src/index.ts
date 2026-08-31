@@ -34,6 +34,8 @@ Options for 'parse-spectra' command:
   -d, --auto-detection     Enable ranges and zones automatic detection.
   -o, --output             Output file path (optional)
   -r, --raw-data           Include raw data in the output instead of data source
+  --include                Include only files matching pattern(s) (glob/regex string, repeatable)
+  --exclude                Exclude files matching pattern(s) (glob/regex string, repeatable)
   
 Arguments for 'parse-publication-string' command:
   publicationString   Publication string
@@ -141,6 +143,18 @@ export interface FileOptionsArgs {
    */
   r?: boolean;
 
+  /**
+   * --include
+   * Only include files matching these pattern(s) when reading a directory (file-collection's filter.include).
+   */
+  include?: string[];
+
+  /**
+   * --exclude
+   * Exclude files matching these pattern(s) when reading a directory (file-collection's filter.exclude).
+   */
+  exclude?: string[];
+
 }
 
 // Define options for parsing a spectra file
@@ -182,6 +196,16 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
     type: 'boolean',
     default: false,
     description: 'Include raw data in the output (default: dataSource)',
+  },
+  include: {
+    type: 'array',
+    string: true,
+    description: 'Only include files matching pattern(s) when reading a directory (glob/regex string)',
+  },
+  exclude: {
+    type: 'array',
+    string: true,
+    description: 'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
   },
 } as const
 

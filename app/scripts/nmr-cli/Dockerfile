@@ -1,12 +1,20 @@
 # build the image ` docker build --tag nmr-cli  . ` 
 # run the container ` docker run -it nmr-cli bash `
 
-FROM mcr.microsoft.com/playwright:v1.58.2-noble
+# NOTE: if `docker run` prints
+#   "Error while loading conda entry point: conda-libmamba-solver (module 'libmambapy' has no attribute 'QueryFormat')"
+# this is unrelated to this image/container — it comes from a version mismatch between
+# conda-libmamba-solver and libmambapy in your HOST shell's conda (base) environment.
+# It does not affect the container. To fix it on the host, run:
+#   conda update -n base -c conda-forge conda conda-libmamba-solver libmambapy
+# or, if that doesn't resolve it:
+#   conda install -n base -c conda-forge --force-reinstall conda-libmamba-solver libmambapy
+# or, to bypass libmamba entirely:
+#   conda config --set solver classic
+
+FROM mcr.microsoft.com/playwright:v1.62.1-noble
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Downgrade to Node 22
-RUN npm install -g n && n 22 && hash -r
 
 WORKDIR /app
 
