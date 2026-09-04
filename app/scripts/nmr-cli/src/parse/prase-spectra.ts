@@ -196,11 +196,9 @@ async function processAndSerialize(
   outputResult({ nmriumState: { data, version }, images, logs }, o);
 }
 
-async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
-  const { u: url, include, exclude } = options;
-
+function buildWebSource(url: string) {
   const { pathname: relativePath, origin: baseURL } = new URL(url)
-  const source = {
+  return {
     entries: [
       {
         relativePath,
@@ -208,7 +206,12 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, l
     ],
     baseURL,
   }
+}
 
+async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
+  const { u: url, include, exclude } = options;
+
+  const source = buildWebSource(url)
 
   const { state } = await core.readFromWebSource(source, { ...parsingOptions, fileFilter: { include, exclude }, logger });
 
@@ -257,4 +260,4 @@ function parseSpectra(argv: yargs.ArgumentsCamelCase<FileOptionsArgs>
 
 
 
-export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra }
+export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra, processSpectra, parsingOptions, core, buildWebSource }
