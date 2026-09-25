@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:24.1.2-0 AS nmrkit-ms
+FROM continuumio/miniconda3:25.3.1-1 AS nmrkit-ms
 ARG TARGETARCH=amd64
 
 ENV PYTHON_VERSION=3.10
@@ -51,8 +51,11 @@ RUN python3 -m pip install uvicorn[standard]
 
 COPY ./app /code/app
 
-RUN curl -sL https://deb.nodesource.com/setup_current.x | bash -
-RUN apt-get install -y nodejs
+# Download the setup script first so a failure fails the build instead of being masked by the pipe
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x -o /tmp/nodesource_setup.sh && \
+    bash /tmp/nodesource_setup.sh && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/* /tmp/nodesource_setup.sh
 RUN npm install -g npm@latest
 
 RUN npm install -g /code/app/scripts/nmr-cli
