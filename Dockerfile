@@ -24,8 +24,13 @@ RUN apt-get update && \
 
 RUN apt-get update && apt-get -y install docker.io
 
-RUN conda install -c conda-forge python>=PYTHON_VERSION
-RUN conda install -c conda-forge openbabel>=OPENBABEL_VERSION
+RUN conda config --remove-key channels && \
+    conda config --add channels conda-forge && \
+    conda config --set channel_priority strict
+
+RUN conda install -y \
+    "python=${PYTHON_VERSION}" \
+    "openbabel>=${OPENBABEL_VERSION}"
 
 RUN pip3 install rdkit
 
