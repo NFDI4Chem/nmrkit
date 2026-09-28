@@ -245,7 +245,7 @@ def get_health() -> HealthCheck:
         "The response has two layers:\n\n"
         "| Layer | Question it answers |\n"
         "|-------|--------------------|\n"
-        "| `reports` | Does the shift list fit the structure? (nmrshiftdb2 quality report: mark 1–10, per-atom deviation, HOSE spheres) |\n"
+        "| `reports` | How well do the assigned shifts fit, atom by atom? (quality report on the author's assignments: mark 1–10, per-atom deviation, HOSE spheres) |\n"
         "| `assignment_check` | Are the shifts on the right atoms? (per-assignment status, swap suggestions, equivalence, missing signals, referencing offset) |\n\n"
         "`verdict` combines both, 13C first. Predictions with fewer than 4 HOSE spheres can "
         "at most lead to `review`, never `fail`. The mark formula approximates nmrshiftdb2 "

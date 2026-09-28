@@ -54,6 +54,13 @@ const IN_DATABASE_MEAN_DEVIATION: Record<Nucleus, number> = { '13C': 1, '1H': 0.
  */
 const MARK_POINTS = { perPpmMeanDeviation: 0.5, redOrMissing: 2, yellow: 1 }
 
+const ATOM_STATUS: Record<AssignmentRowStatus, ReportStatus> = {
+  ok: 'green',
+  review: 'yellow',
+  fail: 'red',
+  not_assessable: 'yellow',
+}
+
 export interface ValidateOptions {
   quickcheck: QuickcheckClient
   url: string
@@ -100,16 +107,14 @@ export async function validateAssignments(
     ? await options.quickcheck(structure.molfile, quickcheckInputs)
     : []
   const predictions = collectPredictions(results, structure, topology)
+  const assignmentCheck = checkAssignments(rows, predictions, topology, structure, input, tolerances, solvent.residual)
 
   const reports: ValidationReport['reports'] = {}
   for (const nucleus of NUCLEI) {
-    const result = results.find((item) => item.id === QUICKCHECK_TYPES[nucleus].id)
-    if (result) {
-      reports[nucleus] = buildNucleusReport(nucleus, result, predictions.get(nucleus)!, rows)
+    if (results.some((item) => item.id === QUICKCHECK_TYPES[nucleus].id)) {
+      reports[nucleus] = buildNucleusReport(nucleus, predictions.get(nucleus)!, rows, assignmentCheck.rows, topology)
     }
   }
-
-  const assignmentCheck = checkAssignments(rows, predictions, topology, structure, input, tolerances, solvent.residual)
 
   return {
     engine: { name: 'nmrshift', source: 'nmrshiftdb2 quickcheck', url: options.url },
@@ -305,11 +310,19 @@ function collectPredictions(
   return predictions
 }
 
+/**
+ * Per-atom quality report on the author's assignments. The servlet only gets
+ * a shift list and matches it to atoms itself, so its own matching can pair a
+ * value with a different atom than the author did; observed values and
+ * statuses therefore come from the assignment check, keeping both tables in
+ * agreement.
+ */
 function buildNucleusReport(
   nucleus: Nucleus,
-  result: QuickcheckResult,
   byAtom: Map<number, AtomPrediction>,
   rows: NormalizedRow[],
+  checked: AssignmentRowResult[],
+  topology: Topology,
 ): NucleusReport {
   const atomRows: ReportAtomRow[] = []
 
@@ -323,20 +336,21 @@ function buildNucleusReport(
       hose_code: entry.hoseCode,
     }
 
-    if (entry.statuses.every((status) => status === 'impossible')) {
+    if (entry.prediction === null) {
       atomRows.push({ ...base, label, observed: null, deviation: null, status: 'impossible' })
       continue
     }
-    if (entry.reals.length === 0) {
+    const covering = rowsAssignedTo(atom, nucleus, rows, topology)
+    if (covering.length === 0) {
       atomRows.push({ ...base, label, observed: null, deviation: null, status: 'missing' })
       continue
     }
 
-    const status = worstStatus(entry.statuses)
-    const observed = [...new Set(entry.reals.map((value) => round(value, 4)))].sort((a, b) => a - b)
-    const prediction = entry.prediction ?? 0
+    const status = worstStatus(covering.map((row) => ATOM_STATUS[checked[row.index].status]))
+    const observed = [...new Set(covering.map((row) => round(row.input.shift, 4)))].sort((a, b) => a - b)
+    const prediction = entry.prediction
 
-    if (nucleus === '1H' && observed.length === 2) {
+    if (nucleus === '1H' && observed.length === 2 && (topology.hydrogenCounts.get(atom) ?? 0) >= 2) {
       const stem = label.replace(/[ab]$/, '')
       const deviation = round(Math.abs(mean(observed) - prediction), 3)
       atomRows.push({ ...base, label: `${stem}a`, observed: observed[0], deviation, status, pair: `${stem}b` })
@@ -360,17 +374,24 @@ function buildNucleusReport(
   const mark = Math.min(10, Math.max(1, Math.round(10 - deviationPoints - redPoints - yellowPoints)))
 
   const sixSphereShare = scored.length ? scored.filter((row) => row.spheres >= 6).length / scored.length : 0
+  const red = atomRows.filter((row) => row.status === 'red')
 
   return {
     mark,
     mark_is_approximate: true,
-    result: mark >= 8 ? 'accept' : mark >= 5 ? 'revise' : 'reject',
+    result: mark >= 8 && red.length === 0 ? 'accept' : mark >= 5 ? 'revise' : 'reject',
     penalties: {
       mean_deviation: { ppm: round(meanDeviation, 2), points: deviationPoints },
       red_or_missing: { count: redOrMissing.length, points: redPoints },
       yellow: { count: yellow.length, points: yellowPoints },
     },
-    statistics: result.statistics,
+    statistics: {
+      accept: atomRows.filter((row) => row.status === 'green').length,
+      warning: yellow.length,
+      reject: red.length,
+      missing: atomRows.filter((row) => row.status === 'missing').length,
+      total: atomRows.length,
+    },
     in_database_likely:
       scored.length >= 3 &&
       sixSphereShare >= 0.8 &&
@@ -408,9 +429,23 @@ function labelForAtom(atom: number, nucleus: Nucleus, rows: NormalizedRow[]): st
   return `${row.label} [${atom}]`
 }
 
-function worstStatus(statuses: string[]): ReportStatus {
-  if (statuses.includes('reject')) return 'red'
-  if (statuses.includes('warning')) return 'yellow'
+/**
+ * The author's rows for an atom; an atom left out of a row that covers a
+ * symmetry-equivalent atom ("C-2" for both C-2 and C-6) shares that row.
+ */
+function rowsAssignedTo(atom: number, nucleus: Nucleus, rows: NormalizedRow[], topology: Topology): NormalizedRow[] {
+  const nucleusRows = rows.filter((row) => row.input.nucleus === nucleus)
+  const own = nucleusRows.filter((row) => row.carriers.includes(atom))
+  if (own.length) return own
+
+  const cls = topology.classes.get(atom)
+  if (cls === undefined) return []
+  return nucleusRows.filter((row) => row.carriers.some((carrier) => topology.classes.get(carrier) === cls))
+}
+
+function worstStatus(statuses: ReportStatus[]): ReportStatus {
+  if (statuses.includes('red')) return 'red'
+  if (statuses.includes('yellow')) return 'yellow'
   return 'green'
 }
 

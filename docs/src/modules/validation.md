@@ -43,7 +43,7 @@ closer look, and the author keeps the final word.
 
 | Key | Question it answers |
 |-----|---------------------|
-| `reports["13C"]`, `reports["1H"]` | Does the shift list fit the structure? Mark 1–10, `accept`/`revise`/`reject`, penalties, per-atom deviation, HOSE spheres and codes, `in_database_likely`. Mirrors the nmrshiftdb2 quality report. |
+| `reports["13C"]`, `reports["1H"]` | How well do the assigned shifts fit, atom by atom? Mark 1–10, `accept`/`revise`/`reject`, penalties, per-atom deviation, HOSE spheres and codes, `in_database_likely`. Laid out like the nmrshiftdb2 quality report, but on the author's assignments: each atom carries its assigned shift and the status of its `assignment_check` row, so both layers always agree. |
 | `assignment_check` | Are the shifts on the right atoms? Status per assignment (`ok`, `review`, `fail`, `not_assessable`), swap suggestions, equivalence violations, missing signals, solvent peaks, proton counts, referencing offset. |
 | `verdict` | `accept`, `review`, `reject` or `not_assessable`; ¹³C drives it. |
 | `adjustments` | Shifts nudged by ±0.001 ppm so the servlet keeps distinct signals with identical values. |
@@ -53,8 +53,9 @@ closer look, and the author keeps the final word.
 nmrshiftdb2 does not publish its mark formula. The mark is an approximation
 (0.5 points per ppm mean deviation, 2 per red or missing atom, 1 per yellow atom,
 halved for predictions with at most 2 spheres) and is flagged with
-`mark_is_approximate`. Predictions with fewer than 4 HOSE spheres can lead to
-`review`, never to `fail`.
+`mark_is_approximate`. A nucleus with a red atom is at best `revise`, whatever
+its mark. Predictions with fewer than 4 HOSE spheres can lead to `review`,
+never to `fail`.
 :::
 
 **Errors:**

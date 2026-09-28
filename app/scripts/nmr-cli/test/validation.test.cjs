@@ -145,13 +145,18 @@ test('a wrong carbon shift is flagged red and fails the assignment', async () =>
   assert.equal(report.verdict, 'reject')
 })
 
-test('swapped carbon labels keep a good structure fit but are caught and a swap is suggested', async () => {
+test('swapped carbon labels are red in the quality report, fail the assignment and suggest a swap', async () => {
   const { report } = await run(
     trimethoxybenzaldehyde({ 'C-1': 143.518, 'C-4': 131.677 }),
     'trimethoxybenzaldehyde-correct',
   )
 
-  assert.equal(report.reports['13C'].mark, 10)
+  const carbons = Object.fromEntries(report.reports['13C'].atoms.map((row) => [row.label, row]))
+  assert.equal(carbons['C-1'].observed, 143.518)
+  assert.equal(carbons['C-1'].status, 'red')
+  assert.equal(carbons['C-4'].status, 'red')
+  assert.ok(report.reports['13C'].mark < 8)
+  assert.notEqual(report.reports['13C'].result, 'accept')
   assert.equal(rowByLabel(report, 'C-1').status, 'fail')
   assert.equal(rowByLabel(report, 'C-4').status, 'fail')
   assert.equal(report.assignment_check.result, 'inconsistent')
@@ -164,8 +169,9 @@ test('nicotine: diastereotopic pairs are scored by their mean and low-sphere ato
   assert.equal(calls[0].inputs[1].shifts.split(';').length, 12)
   assert.equal(report.reports['13C'].mark, 10)
 
-  const servletFit = report.reports['1H'].atoms.filter((row) => row.atoms[0] === 3)
-  assert.deepEqual(servletFit.map((row) => row.label), ["H-5'"])
+  const pairRows = report.reports['1H'].atoms.filter((row) => row.atoms[0] === 3)
+  assert.deepEqual(pairRows.map((row) => row.label), ["H-5'a", "H-5'b"])
+  assert.deepEqual(pairRows.map((row) => row.observed), [2.31, 3.24])
 
   assert.equal(rowByLabel(report, "H-5'a").status, 'ok')
   assert.equal(rowByLabel(report, "H-5'b").status, 'ok')
@@ -179,20 +185,38 @@ test('nicotine: diastereotopic pairs are scored by their mean and low-sphere ato
   assert.equal(report.assignment_check.result, 'review')
 })
 
-test('a CH2 matched to two distinct shifts is reported as an a/b pair sharing the mean deviation', async () => {
-  const response = structuredClone(responses.nicotine)
+test('the quality report follows the author\'s assignments, not the servlet\'s own matching', async () => {
+  const response = structuredClone(responses['trimethoxybenzaldehyde-correct'])
   const proton = response.result.find((result) => result.id === 2)
-  proton.shifts.find((shift) => shift.atom === 16).real = 2.31
-  proton.shifts.find((shift) => shift.atom === 17).real = 3.24
-  responses['nicotine-split-pair'] = response
+  for (const shift of proton.shifts) {
+    if (shift.atom === 15 || shift.atom === 16) shift.real = 9.862
+    if (shift.atom === 17) shift.real = 7.123
+  }
+  responses['trimethoxybenzaldehyde-rematched'] = response
 
-  const { report } = await run(nicotine(), 'nicotine-split-pair')
+  const { report } = await run(trimethoxybenzaldehyde(), 'trimethoxybenzaldehyde-rematched')
 
-  const pairRows = report.reports['1H'].atoms.filter((row) => row.atoms[0] === 3)
-  assert.deepEqual(pairRows.map((row) => row.label), ["H-5'a", "H-5'b"])
-  assert.deepEqual(pairRows.map((row) => row.observed), [2.31, 3.24])
-  assert.equal(pairRows[0].deviation, pairRows[1].deviation)
-  assert.equal(pairRows[0].pair, "H-5'b")
+  const protons = report.reports['1H'].atoms
+  assert.equal(protons.find((row) => row.atoms[0] === 7).observed, 9.862)
+  assert.equal(protons.find((row) => row.atoms[0] === 1).observed, 7.123)
+  assert.ok(protons.every((row) => row.status === 'green'))
+  assert.equal(report.reports['1H'].result, 'accept')
+  assert.equal(report.assignment_check.result, 'consistent')
+})
+
+test('one proton that does not match keeps the nucleus from a good fit', async () => {
+  const input = trimethoxybenzaldehyde()
+  input.assignments.find((row) => row.label === 'H-7').shift = 8.2
+
+  const { report } = await run(input, 'trimethoxybenzaldehyde-correct')
+
+  const aldehyde = report.reports['1H'].atoms.find((row) => row.label === 'H-7')
+  assert.equal(aldehyde.observed, 8.2)
+  assert.equal(aldehyde.status, 'red')
+  assert.equal(rowByLabel(report, 'H-7').status, 'fail')
+  assert.equal(report.reports['1H'].mark, 8)
+  assert.equal(report.reports['1H'].result, 'revise')
+  assert.equal(report.reports['1H'].statistics.reject, 1)
 })
 
 test('unassigned C-H environments are reported by the author\'s carbon labels', async () => {
