@@ -179,6 +179,11 @@ function resolveCarrier(
   if (nucleus === '1H') {
     const parent = structure.explicitHydrogenParents.get(atom)
     if (parent !== undefined) return parent
+
+    const atomCount = structure.symbols.size
+    if (atom > atomCount) {
+      return topology.servletHydrogenOwners.get(atom - atomCount + structure.heavyAtomCount) ?? null
+    }
     return (topology.hydrogenCounts.get(atom) ?? 0) > 0 ? atom : null
   }
 

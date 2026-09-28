@@ -10,7 +10,9 @@ export interface Tolerance {
 /**
  * One observed signal. `atoms` are 1-based indices of the submitted molfile.
  * For 1H, an index may point at the heavy atom carrying the protons
- * (NMReDATA convention) or at an explicit H atom. An empty `atoms` list is a
+ * (NMReDATA convention), at an explicit H atom, or past the last molfile atom
+ * at an implicit H numbered heavy atom by heavy atom, as openchemlib's
+ * `addImplicitHydrogens` does (NMRium convention). An empty `atoms` list is a
  * signal without assignment; it only contributes to the structure fit.
  */
 export interface AssignmentInput {

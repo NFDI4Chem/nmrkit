@@ -207,6 +207,21 @@ test('unassigned C-H environments are reported by the author\'s carbon labels', 
   assert.deepEqual(missing.atoms, [4, 5])
 })
 
+test('1H atoms past the molfile resolve as implicit hydrogens (NMRium numbering)', async () => {
+  const input = nicotine()
+  const implicitHydrogens = { "H-2'": [22], "H-5'a": [16], "H-5'b": [17], 'N-CH3': [13, 14, 15] }
+  input.assignments = input.assignments.map((row) =>
+    row.nucleus === '1H' && implicitHydrogens[row.label] ? { ...row, atoms: implicitHydrogens[row.label] } : row,
+  )
+
+  const { report } = await run(input, 'nicotine')
+
+  assert.deepEqual(rowByLabel(report, "H-2'").atoms, [6])
+  assert.deepEqual(rowByLabel(report, "H-5'a").atoms, [3])
+  assert.deepEqual(report.assignment_check.rows.find((row) => row.nucleus === '1H' && row.label === 'N-CH3').atoms, [1])
+  assert.ok(!report.assignment_check.issues.some((issue) => issue.type === 'unknown_atom'))
+})
+
 test('distinct signals with the same shift are nudged so the servlet keeps both', async () => {
   const input = trimethoxybenzaldehyde()
   input.assignments.find((row) => row.label === 'H-9').shift = 3.926

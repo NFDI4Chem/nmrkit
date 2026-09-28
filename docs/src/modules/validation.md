@@ -33,7 +33,7 @@ closer look, and the author keeps the final word.
 | Field | Notes |
 |-------|-------|
 | `structure.molfile` | V2000. Explicit H atoms are allowed and are stripped before the servlet call. |
-| `assignments[].atoms` | 1-based molfile indices. For ¹H either the carrying heavy atom or an explicit H. Equivalent atoms share one entry. |
+| `assignments[].atoms` | 1-based molfile indices. For ¹H: the carrying heavy atom, an explicit H, or an index past the last molfile atom for an implicit H numbered heavy atom by heavy atom (openchemlib `addImplicitHydrogens`, as NMRium does). Equivalent atoms share one entry. |
 | `assignments[].label` | Author label. `"C-2, C-6"` with two atoms gives one report row per atom. |
 | `assignments[].diastereotopic` | Marks the two protons of a CH₂; the pair is compared by its mean. |
 | `unassigned_peaks` | `unknown` peaks join the structure fit; `solvent` and `impurity` peaks are ignored. |
