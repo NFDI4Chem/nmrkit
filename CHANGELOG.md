@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.2.0...v1.3.0) (2026-09-29)
+
+
+### Features
+
+* add include/exclude file filters to parse-spectra ([#138](https://github.com/NFDI4Chem/nmrkit/issues/138)) ([2a200ab](https://github.com/NFDI4Chem/nmrkit/commit/2a200ab47595ae0f63bd19325d7da0edd55cb018))
+* **nmr-cli:** add nmr-correlation as a new command ([#140](https://github.com/NFDI4Chem/nmrkit/issues/140)) ([63d1e48](https://github.com/NFDI4Chem/nmrkit/commit/63d1e48c8ff4f307523d4f6d69c7b642e10f3861))
+
+
+### Bug Fixes
+
+* correct GitHub contributors badge link and minor text adjustments in README ([2ac511c](https://github.com/NFDI4Chem/nmrkit/commit/2ac511cb47af4a8d9bfe8c46433b7efee3e9ed67))
+* update miniconda3 version and improve nodejs installation proces… ([#145](https://github.com/NFDI4Chem/nmrkit/issues/145)) ([17a322f](https://github.com/NFDI4Chem/nmrkit/commit/17a322f8ca89b8584da74efa14b2aec34afb1fef))
+
 ## [1.2.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.1.1...v1.2.0) (2026-08-19)
 
 
