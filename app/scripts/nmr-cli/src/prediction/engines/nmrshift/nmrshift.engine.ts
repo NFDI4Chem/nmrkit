@@ -176,6 +176,52 @@ async function predictNMR(
     }
   }
 
+  for (let i = 0; i < results.length; i++) {
+    const response: PredictionResponse = results[i].data
+    const experimentInfo = experiments[i]
+
+    for (const item of response.result) {
+      const data = generatePredictedSpectrumData(item.shifts, {
+        from,
+        to,
+        nbPoints,
+        lineWidth,
+        frequency,
+        tolerance,
+        peakShape,
+      })
+
+      if (!data) continue
+
+      const name = crypto.randomUUID()
+
+      outputSpectra.push({
+        id: crypto.randomUUID(),
+        data,
+        info: {
+          isFid: false,
+          isComplex: false,
+          dimension: 1,
+          originFrequency: frequency,
+          baseFrequency: frequency,
+          pulseSequence: '',
+          solvent,
+          isFt: true,
+          name,
+          nucleus: experimentInfo.nucleus,
+          // Kept so clients can label atoms and mark the matching peaks.
+          // NMRShiftDB atom numbers are 1-based and follow openchemlib's
+          // addImplicitHydrogens order.
+          predictionShifts: item.shifts.map(shift => ({
+            atom: shift.atom,
+            prediction: shift.prediction,
+            status: shift.status,
+          })),
+        },
+      } as unknown as Spectrum)
+    }
+  }
+
   return outputSpectra
 }
 
