@@ -4,6 +4,7 @@ import { parseSpectra } from './parse/prase-spectra'
 import { generateSpectrumFromPublicationString } from './publication-string'
 import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
 import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
+import { generateCorrelationData } from './correlation'
 import { hideBin } from 'yargs/helpers'
 import { parsePredictionCommand } from './prediction'
 import { readFileSync } from 'fs'
@@ -15,8 +16,16 @@ Usage: nmr-cli  <command> [options]
 Commands:
   parse-spectra                Parse a spectra file to NMRium file
   parse-publication-string     resurrect spectrum from the publication string 
-  predict                      Predict spectrum from Mol 
+  predict                      Predict spectrum from Mol
   peaks-to-nmrium              Convert a peak list to NMRium object
+  correlation                  Build correlation data from NMR spectra fetched from a URL
+
+Options for 'correlation' command:
+  -u, --url                Spectra ZIP file URL
+  -dir, --dir-path         Local directory path
+      --mf                Molecular formula
+      --tolerance-h, --th  H tolerance override (default: 0.02)
+      --tolerance-c, --tc  C tolerance override (default: 0.25)
 
 Options for 'parse-spectra' command:
   -u, --url                File URL  
@@ -26,6 +35,8 @@ Options for 'parse-spectra' command:
   -d, --auto-detection     Enable ranges and zones automatic detection.
   -o, --output             Output file path (optional)
   -r, --raw-data           Include raw data in the output instead of data source
+  --include                Include only files matching pattern(s) (glob/regex string, repeatable)
+  --exclude                Exclude files matching pattern(s) (glob/regex string, repeatable)
   
 Arguments for 'parse-publication-string' command:
   publicationString   Publication string
@@ -133,6 +144,18 @@ export interface FileOptionsArgs {
    */
   r?: boolean;
 
+  /**
+   * --include
+   * Only include files matching these pattern(s) when reading a directory (file-collection's filter.include).
+   */
+  include?: string[];
+
+  /**
+   * --exclude
+   * Exclude files matching these pattern(s) when reading a directory (file-collection's filter.exclude).
+   */
+  exclude?: string[];
+
 }
 
 // Define options for parsing a spectra file
@@ -174,6 +197,16 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
     type: 'boolean',
     default: false,
     description: 'Include raw data in the output (default: dataSource)',
+  },
+  include: {
+    type: 'array',
+    string: true,
+    description: 'Only include files matching pattern(s) when reading a directory (glob/regex string)',
+  },
+  exclude: {
+    type: 'array',
+    string: true,
+    description: 'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
   },
 } as const
 
@@ -226,12 +259,73 @@ const peaksToNMRiumCommand: CommandModule = {
   },
 }
 
+// Define the correlation command
+const correlationCommand: CommandModule = {
+  command: ['correlation', 'corr'],
+  describe: 'Build correlation data from NMR spectra fetched from a URL or a local directory',
+  builder: yargs => {
+    return yargs
+      .options({
+        u: {
+          alias: 'url',
+          describe: 'Spectra ZIP file URL',
+          type: 'string',
+          nargs: 1,
+        },
+        dir: {
+          alias: 'dir-path',
+          describe: 'Local directory path',
+          type: 'string',
+          nargs: 1,
+        },
+        mf: {
+          describe: 'Molecular formula',
+          type: 'string',
+          demandOption: true,
+          nargs: 1,
+        },
+        'tolerance-h': {
+          alias: 'th',
+          describe: 'H tolerance override',
+          type: 'number',
+          default: 0.02,
+        },
+        'tolerance-c': {
+          alias: 'tc',
+          describe: 'C tolerance override',
+          type: 'number',
+          default: 0.25,
+        },
+      })
+      .conflicts('u', 'dir')
+  },
+  handler: async argv => {
+    try {
+      const result = await generateCorrelationData({
+        url: argv.u as string | undefined,
+        dir: argv.dir as string | undefined,
+        mf: argv.mf as string,
+        toleranceH: argv['tolerance-h'] as number | undefined,
+        toleranceC: argv['tolerance-c'] as number | undefined,
+      })
+      console.log(JSON.stringify(result))
+    } catch (error) {
+      console.error(
+        'Error:',
+        error instanceof Error ? error.message : String(error),
+      )
+      process.exit(1)
+    }
+  },
+}
+
 yargs(hideBin(process.argv))
   .usage(usageMessage)
   .command(parseFileCommand)
   .command(parsePublicationCommand)
   .command(parsePredictionCommand)
   .command(peaksToNMRiumCommand)
+  .command(correlationCommand)
   .showHelpOnFail(true)
   .help()
   .parse()

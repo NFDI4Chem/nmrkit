@@ -196,11 +196,9 @@ async function processAndSerialize(
   outputResult({ nmriumState: { data, version }, images, logs }, o);
 }
 
-async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
-  const { u: url } = options;
-
+function buildWebSource(url: string) {
   const { pathname: relativePath, origin: baseURL } = new URL(url)
-  const source = {
+  return {
     entries: [
       {
         relativePath,
@@ -208,22 +206,32 @@ async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, l
     ],
     baseURL,
   }
+}
 
+async function loadSpectrumFromURL(options: RequiredKey<FileOptionsArgs, 'u'>, logger: FifoLogger) {
+  const { u: url, include, exclude } = options;
 
-  const { state } = await core.readFromWebSource(source, { ...parsingOptions, logger });
+  const source = buildWebSource(url)
+
+  const { state } = await core.readFromWebSource(source, { ...parsingOptions, fileFilter: { include, exclude }, logger });
 
   processAndSerialize(state, options, logger)
 
 }
 
-async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>, logger: FifoLogger) {
-  const { dir: path } = options;
-
+function loadFileCollection(path: string, include?: string[], exclude?: string[]) {
   const dirPath = isAbsolute(path) ? path : join(process.cwd(), path)
 
-  const fileCollection = await FileCollection.fromPath(dirPath, {
+  return FileCollection.fromPath(dirPath, {
     unzip: { zipExtensions: ['zip', 'nmredata'] },
+    filter: { include, exclude },
   })
+}
+
+async function loadSpectrumFromFilePath(options: RequiredKey<FileOptionsArgs, 'dir'>, logger: FifoLogger) {
+  const { dir: path, include, exclude } = options;
+
+  const fileCollection = await loadFileCollection(path, include, exclude)
 
   const {
     state
@@ -256,4 +264,4 @@ function parseSpectra(argv: yargs.ArgumentsCamelCase<FileOptionsArgs>
 
 
 
-export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra }
+export { loadSpectrumFromFilePath, loadSpectrumFromURL, parseSpectra, processSpectra, parsingOptions, core, buildWebSource, loadFileCollection }
