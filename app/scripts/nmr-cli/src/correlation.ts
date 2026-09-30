@@ -8,8 +8,8 @@ import {
   loadFileCollection,
   parsingOptions,
   processSpectra,
-} from './parse/prase-spectra'
-import { isSpectrum2D } from './parse/data/data2d/isSpectrum2D'
+} from './parse/prase-spectra.js'
+import { isSpectrum2D } from './parse/data/data2d/isSpectrum2D.js'
 
 // Default tolerances confirmed by vcnainala on issue #66
 const DEFAULT_TOLERANCE_H = 0.02

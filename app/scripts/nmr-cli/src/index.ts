@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
-import { parseSpectra } from './parse/prase-spectra'
-import { generateSpectrumFromPublicationString } from './publication-string'
-import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
-import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
-import { generateCorrelationData } from './correlation'
+import { parseSpectra } from './parse/prase-spectra.js'
+import { generateSpectrumFromPublicationString } from './publication-string.js'
+import { generateNMRiumFromPeaks } from './peaks-to-nmrium.js'
+import type { PeaksToNMRiumInput } from './peaks-to-nmrium.js'
+import { generateCorrelationData } from './correlation.js'
 import { hideBin } from 'yargs/helpers'
-import { parsePredictionCommand } from './prediction'
-import { readFileSync } from 'fs'
-import { IncludeData } from '@zakodium/nmrium-core'
+import { parsePredictionCommand } from './prediction/index.js'
+import { readFileSync } from 'node:fs'
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -103,59 +102,58 @@ Examples:
 `
 
 export interface FileOptionsArgs {
-  /**  
+  /**
    * -u, --url  
    * File URL to load remote spectra or data.
    */
-  u?: string;
+  u?: string
 
-  /**  
+  /**
    * -dir, --dir-path  
    * Local directory path for file input or output.
    */
-  dir?: string;
+  dir?: string
 
-  /**  
+  /**
    * -s, --capture-snapshot  
    * Capture a visual snapshot of the current state or spectrum.
    */
-  s?: boolean;
+  s?: boolean
 
-  /**  
+  /**
    * -p, --auto-processing  
    * Automatically process spectrum from FID to FT spectra.  
    * Mandatory when automatic detection (`--auto-detection`) is enabled.
    */
-  p?: boolean;
+  p?: boolean
 
-  /**  
+  /**
    * -d, --auto-detection  
    * Perform automatic ranges and zones detection.
    */
-  d?: boolean;
+  d?: boolean
   /**
-   *   -o, --output      
+   *   -o, --output  
    *   Output file path
    */
-  o?: string;
+  o?: string
   /**
-   *  -r, --raw-data   
+   *  -r, --raw-data  
    *   Include raw data in the output, defaults to dataSource
    */
-  r?: boolean;
+  r?: boolean
 
   /**
    * --include
    * Only include files matching these pattern(s) when reading a directory (file-collection's filter.include).
    */
-  include?: string[];
+  include?: string[]
 
   /**
    * --exclude
    * Exclude files matching these pattern(s) when reading a directory (file-collection's filter.exclude).
    */
-  exclude?: string[];
-
+  exclude?: string[]
 }
 
 // Define options for parsing a spectra file
@@ -201,12 +199,14 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
   include: {
     type: 'array',
     string: true,
-    description: 'Only include files matching pattern(s) when reading a directory (glob/regex string)',
+    description:
+      'Only include files matching pattern(s) when reading a directory (glob/regex string)',
   },
   exclude: {
     type: 'array',
     string: true,
-    description: 'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
+    description:
+      'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
   },
 } as const
 
@@ -252,7 +252,7 @@ const peaksToNMRiumCommand: CommandModule = {
     } catch (error) {
       console.error(
         'Error:',
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.message : String(error)
       )
       process.exit(1)
     }
@@ -262,7 +262,8 @@ const peaksToNMRiumCommand: CommandModule = {
 // Define the correlation command
 const correlationCommand: CommandModule = {
   command: ['correlation', 'corr'],
-  describe: 'Build correlation data from NMR spectra fetched from a URL or a local directory',
+  describe:
+    'Build correlation data from NMR spectra fetched from a URL or a local directory',
   builder: yargs => {
     return yargs
       .options({
@@ -312,7 +313,7 @@ const correlationCommand: CommandModule = {
     } catch (error) {
       console.error(
         'Error:',
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.message : String(error)
       )
       process.exit(1)
     }
