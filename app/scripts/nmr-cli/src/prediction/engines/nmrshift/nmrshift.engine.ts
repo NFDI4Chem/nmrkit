@@ -1,6 +1,6 @@
 import type { Options } from 'yargs'
 import type { Spectrum } from '@zakodium/nmrium-core'
-import https from 'https'
+import https from 'node:https'
 import axios, { type AxiosResponse } from 'axios'
 
 import { defineEngine } from '../registry.js'
@@ -61,6 +61,15 @@ function getBaseUrl(): string {
     throw new Error(`Invalid URL in NMR_PREDICTION_URL: "${url}"`)
   }
   return url
+}
+
+function getPredictionShifts(shifts: ShiftsItem[]) {
+  // NMRShiftDB atom numbers are 1-based and follow openchemlib's addImplicitHydrogens order.
+  return shifts.map(({ atom, prediction, status }) => ({
+    atom,
+    prediction,
+    status,
+  }))
 }
 
 async function callPredict(
@@ -155,6 +164,8 @@ async function predictNMR(
 
       if (!data) continue
 
+      const predictionShifts = getPredictionShifts(item.shifts)
+
       const name = crypto.randomUUID()
 
       outputSpectra.push({
@@ -171,6 +182,8 @@ async function predictNMR(
           isFt: true,
           name,
           nucleus: experimentInfo.nucleus,
+          // Kept so clients can label atoms and mark the matching peaks.
+          predictionShifts,
         },
       } as unknown as Spectrum)
     }
