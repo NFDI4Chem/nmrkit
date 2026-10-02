@@ -1,6 +1,6 @@
 import type { Options } from 'yargs'
 import type { Spectrum } from '@zakodium/nmrium-core'
-import https from 'https'
+import https from 'node:https'
 import axios, { type AxiosResponse } from 'axios'
 
 import { defineEngine } from '../registry.js'
@@ -61,6 +61,15 @@ function getBaseUrl(): string {
     throw new Error(`Invalid URL in NMR_PREDICTION_URL: "${url}"`)
   }
   return url
+}
+
+function getPredictionShifts(shifts: ShiftsItem[]) {
+  // NMRShiftDB atom numbers are 1-based and follow openchemlib's addImplicitHydrogens order.
+  return shifts.map(({ atom, prediction, status }) => ({
+    atom,
+    prediction,
+    status,
+  }))
 }
 
 async function callPredict(
@@ -155,43 +164,7 @@ async function predictNMR(
 
       if (!data) continue
 
-      const name = crypto.randomUUID()
-
-      outputSpectra.push({
-        id: crypto.randomUUID(),
-        data,
-        info: {
-          isFid: false,
-          isComplex: false,
-          dimension: 1,
-          originFrequency: frequency,
-          baseFrequency: frequency,
-          pulseSequence: '',
-          solvent,
-          isFt: true,
-          name,
-          nucleus: experimentInfo.nucleus,
-        },
-      } as unknown as Spectrum)
-    }
-  }
-
-  for (let i = 0; i < results.length; i++) {
-    const response: PredictionResponse = results[i].data
-    const experimentInfo = experiments[i]
-
-    for (const item of response.result) {
-      const data = generatePredictedSpectrumData(item.shifts, {
-        from,
-        to,
-        nbPoints,
-        lineWidth,
-        frequency,
-        tolerance,
-        peakShape,
-      })
-
-      if (!data) continue
+      const predictionShifts = getPredictionShifts(item.shifts)
 
       const name = crypto.randomUUID()
 
@@ -210,13 +183,7 @@ async function predictNMR(
           name,
           nucleus: experimentInfo.nucleus,
           // Kept so clients can label atoms and mark the matching peaks.
-          // NMRShiftDB atom numbers are 1-based and follow openchemlib's
-          // addImplicitHydrogens order.
-          predictionShifts: item.shifts.map(shift => ({
-            atom: shift.atom,
-            prediction: shift.prediction,
-            status: shift.status,
-          })),
+          predictionShifts,
         },
       } as unknown as Spectrum)
     }
