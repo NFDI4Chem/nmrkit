@@ -6,6 +6,7 @@
   "main": "./build/index.js",
   "scripts": {
     "build": "tsc",
+    "test": "tsc && node --test test/*.test.mjs",
     "start": "node build/index.js",
     "dev": "nmr-cli src/index.ts"
   },

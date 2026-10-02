@@ -5,7 +5,7 @@ from fastapi_versioning import VersionedFastAPI
 
 from .routers import registration
 from .routers import chem
-from .routers import spectra, converter, predict
+from .routers import spectra, converter, predict, validate
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core import config, tasks
@@ -28,6 +28,7 @@ A Python-based microservice for **storing**, **parsing**, **converting**, and
 | **Spectra** | Parse NMR spectra from files or URLs |
 | **Converter** | Convert NMR raw data to NMRium JSON |
 | **Predict** | Predict NMR spectra using nmrdb.org or nmrshift engines |
+| **Validate** | Check 1H/13C assignments against nmrshiftdb2 quickcheck predictions |
 | **Registration** | Register and query molecules via lwreg |
 
 ### Links
@@ -62,6 +63,13 @@ tags_metadata = [
         ),
     },
     {
+        "name": "validate",
+        "description": (
+            "Validate 1H/13C assignments of a structure against **nmrshiftdb2 quickcheck** "
+            "predictions: quality mark per nucleus, per-atom deviations and assignment checks."
+        ),
+    },
+    {
         "name": "registration",
         "description": "Register, query, and retrieve molecules using the lwreg registration system.",
     },
@@ -89,6 +97,7 @@ app.include_router(chem.router)
 app.include_router(spectra.router)
 app.include_router(converter.router)
 app.include_router(predict.router)
+app.include_router(validate.router)
 
 if hasattr(app, "add_event_handler"):
     app.add_event_handler("startup", tasks.create_start_app_handler(app))

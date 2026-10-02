@@ -7,6 +7,7 @@ import type { PeaksToNMRiumInput } from './peaks-to-nmrium.js'
 import { generateCorrelationData } from './correlation.js'
 import { hideBin } from 'yargs/helpers'
 import { parsePredictionCommand } from './prediction/index.js'
+import { validateAssignmentsCommand } from './validation/index.js'
 import { readFileSync } from 'node:fs'
 
 const usageMessage = `
@@ -18,6 +19,7 @@ Commands:
   predict                      Predict spectrum from Mol
   peaks-to-nmrium              Convert a peak list to NMRium object
   correlation                  Build correlation data from NMR spectra fetched from a URL
+  validate-assignments         Check 1H/13C assignments against nmrshiftdb2 quickcheck (JSON on stdin)
 
 Options for 'correlation' command:
   -u, --url                Spectra ZIP file URL
@@ -91,6 +93,20 @@ Arguments for 'peaks-to-nmrium' command:
       "nbPoints": 131072        (default: 131072)
     }
   }
+
+Arguments for 'validate-assignments' command:
+  Reads JSON from stdin with the following structure:
+  {
+    "structure": { "molfile": "...V2000..." },
+    "conditions": { "solvent": "CDCl3" },
+    "assignments": [
+      { "nucleus": "13C", "atoms": [1, 3], "label": "C-2, C-6", "shift": 106.65 },
+      { "nucleus": "1H", "atoms": [9], "label": "H-9a", "shift": 2.31, "n_h": 1 }
+    ],
+    "unassigned_peaks": [{ "nucleus": "13C", "shift": 77.16, "kind": "solvent" }]
+  }
+  Atom numbers are 1-based molfile indices; for 1H they may point at the carrying heavy atom.
+  Exit codes: 2 invalid input, 3 nmrshiftdb unavailable.
 
 Examples:
   nmr-cli  parse-spectra -u file-url -s                                   // Process spectra files from a URL and capture an image for the spectra
@@ -327,6 +343,7 @@ yargs(hideBin(process.argv))
   .command(parsePredictionCommand)
   .command(peaksToNMRiumCommand)
   .command(correlationCommand)
+  .command(validateAssignmentsCommand)
   .showHelpOnFail(true)
   .help()
   .parse()
