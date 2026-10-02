@@ -1,10 +1,10 @@
-import { readFileSync } from 'fs'
+import { readFileSync } from 'node:fs'
 import type { CommandModule } from 'yargs'
 
-import { InvalidStructureError } from './molfile'
-import { createQuickcheckClient, quickcheckUrl, QuickcheckUnavailableError } from './quickcheck'
-import type { AssignmentSetInput } from './types'
-import { InvalidInputError, validateAssignments } from './validate'
+import { InvalidStructureError } from './molfile.js'
+import { createQuickcheckClient, quickcheckUrl, QuickcheckUnavailableError } from './quickcheck.js'
+import type { AssignmentSetInput } from './types.js'
+import { InvalidInputError, validateAssignments } from './validate.js'
 
 /** Exit codes the API maps to HTTP statuses. */
 export const EXIT_INVALID_INPUT = 2

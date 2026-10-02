@@ -1,12 +1,14 @@
-const { test } = require('node:test')
-const assert = require('node:assert/strict')
-const { readFileSync } = require('node:fs')
-const { join } = require('node:path')
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const { validateAssignments, InvalidInputError } = require('../build/validation/validate')
-const { prepareStructure, InvalidStructureError } = require('../build/validation/molfile')
-const { analyseTopology } = require('../build/validation/topology')
+import { validateAssignments, InvalidInputError } from '../build/validation/validate.js'
+import { prepareStructure, InvalidStructureError } from '../build/validation/molfile.js'
+import { analyseTopology } from '../build/validation/topology.js'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const fixture = (name) => readFileSync(join(__dirname, 'fixtures', name), 'utf-8')
 const responses = JSON.parse(fixture('quickcheck-responses.json'))
 

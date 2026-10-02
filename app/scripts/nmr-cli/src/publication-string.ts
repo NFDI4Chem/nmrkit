@@ -1,9 +1,6 @@
-import {
-  resurrect,
-  rangesToXY,
-} from 'nmr-processing'
+import { resurrect, rangesToXY } from 'nmr-processing'
 import { CURRENT_EXPORT_VERSION } from '@zakodium/nmrium-core'
-import { castToArray } from './utilities/castToArray'
+import { castToArray } from './utilities/castToArray.js'
 import { NMRRange } from '@zakodium/nmr-types'
 
 interface Info {
@@ -12,10 +9,7 @@ interface Info {
   name: string
 }
 
-function generateSpectrumFromRanges(
-  ranges: NMRRange[],
-  info: Info
-) {
+function generateSpectrumFromRanges(ranges: NMRRange[], info: Info) {
   const { nucleus, solvent, name = null } = info
 
   const frequency = 400

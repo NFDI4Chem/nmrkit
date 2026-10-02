@@ -2,10 +2,11 @@
   "name": "nmr-cli",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "./build/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node --test test/*.test.cjs",
+    "test": "tsc && node --test test/*.test.mjs",
     "start": "node build/index.js",
     "dev": "nmr-cli src/index.ts"
   },
@@ -34,7 +35,7 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.9",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.3",
     "@types/yargs": "^17.0.35",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

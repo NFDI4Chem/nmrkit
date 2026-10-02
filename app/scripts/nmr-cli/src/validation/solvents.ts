@@ -1,4 +1,4 @@
-import type { Nucleus } from './types'
+import type { Nucleus } from './types.js'
 
 interface SolventInfo {
   nmrshiftdb: string

@@ -1,7 +1,7 @@
-import https from 'https'
+import https from 'node:https'
 import axios from 'axios'
 
-import type { QuickcheckClient, QuickcheckInput, QuickcheckResult } from './types'
+import type { QuickcheckClient, QuickcheckInput, QuickcheckResult } from './types.js'
 
 export class QuickcheckUnavailableError extends Error {}
 

@@ -1,9 +1,9 @@
-import { InvalidStructureError, prepareStructure } from './molfile'
-import type { PreparedStructure } from './molfile'
-import { resolveSolvent } from './solvents'
-import { analyseTopology } from './topology'
-import type { Topology } from './topology'
-import { NUCLEI } from './types'
+import { InvalidStructureError, prepareStructure } from './molfile.js'
+import type { PreparedStructure } from './molfile.js'
+import { resolveSolvent } from './solvents.js'
+import { analyseTopology } from './topology.js'
+import type { Topology } from './topology.js'
+import { NUCLEI } from './types.js'
 import type {
   AssignmentCheck,
   AssignmentInput,
@@ -21,7 +21,7 @@ import type {
   SwapSuggestion,
   Tolerance,
   ValidationReport,
-} from './types'
+} from './types.js'
 
 export class InvalidInputError extends Error {}
 

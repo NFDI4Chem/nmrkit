@@ -1,6 +1,6 @@
 import { Molecule } from 'openchemlib'
 
-import type { PreparedStructure } from './molfile'
+import type { PreparedStructure } from './molfile.js'
 
 export interface Topology {
   /** Implicit H count by 1-based original heavy-atom index. */
