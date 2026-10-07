@@ -4,6 +4,8 @@
     "module": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
+    "types": ["node"],
+    "rootDir": "./src",
     "outDir": "./build",
     "skipLibCheck": true
   },
