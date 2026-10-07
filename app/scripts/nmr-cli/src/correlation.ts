@@ -104,7 +104,10 @@ export async function generateCorrelationData(input: CorrelationInput) {
 
   let correlationData
   try {
-    correlationData = buildCorrelationData(spectra as Spectra, options)
+    correlationData = buildCorrelationData(
+      spectra as unknown as Spectra,
+      options
+    )
   } catch (error) {
     throw new Error(
       `Failed to build correlation data: ${error instanceof Error ? error.message : String(error)}`
