@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.3.0...v1.4.0) (2026-10-21)
+
+
+### Features
+
+* assignment validation against nmrshiftdb2 quickcheck ([#147](https://github.com/NFDI4Chem/nmrkit/issues/147)) ([7576c98](https://github.com/NFDI4Chem/nmrkit/commit/7576c98ba1927206202c599b17336ed29f7cb530))
+* include atom shifts in nmrshift predictions ([#148](https://github.com/NFDI4Chem/nmrkit/issues/148)) ([d1c221f](https://github.com/NFDI4Chem/nmrkit/commit/d1c221f54c16947fbe61550c0436e6214906c64e))
+* **nmr-cli:** update packages for NMRium v3.1 ([124f340](https://github.com/NFDI4Chem/nmrkit/commit/124f34006fbdef59aa092c1dba205dbf54203b93))
+
+
+### Bug Fixes
+
+* **nmr-cli:** build as ESM to restore nmr-processing exports ([#150](https://github.com/NFDI4Chem/nmrkit/issues/150)) ([2f3b11f](https://github.com/NFDI4Chem/nmrkit/commit/2f3b11fa3fa7dda170adeaf29a599c76d5f27715))
+
 ## [1.3.0](https://github.com/NFDI4Chem/nmrkit/compare/v1.2.0...v1.3.0) (2026-09-29)
 
 
