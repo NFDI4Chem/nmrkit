@@ -1,12 +1,12 @@
-import type { Integrals } from '@zakodium/nmr-types';
-import type { Spectrum1D } from '@zakodium/nmrium-core';
-import merge from 'lodash.merge';
-import { mapIntegrals } from 'nmr-processing';
+import type { Integrals } from '@zakodium/nmr-types'
+import type { Spectrum1D } from '@zakodium/nmrium-core'
+import merge from 'lodash.merge'
+import { mapIntegrals } from 'nmr-processing'
 
 export function initiateIntegrals(
   inputSpectrum: Partial<Spectrum1D>,
   spectrum: Spectrum1D,
-  options: Integrals['options'],
+  options: Integrals['options']
 ) {
   return merge(
     {
@@ -15,6 +15,6 @@ export function initiateIntegrals(
     },
     {
       values: mapIntegrals(inputSpectrum?.integrals?.values || [], spectrum),
-    },
-  );
+    }
+  )
 }

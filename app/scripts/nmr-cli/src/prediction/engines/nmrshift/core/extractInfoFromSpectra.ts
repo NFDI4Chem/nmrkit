@@ -1,15 +1,13 @@
-import { Experiment } from "../../base";
-import { spectraTypeMap, SpectraTypeMapItem } from "./spectraTypeMap";
-
-
+import { Experiment } from '../../base.js'
+import { spectraTypeMap, SpectraTypeMapItem } from './spectraTypeMap.js'
 
 export function extractInfoFromSpectra(spectra: Experiment[]) {
-    const info: SpectraTypeMapItem[] = [];
-    for (const experiment of spectra) {
-        const data = spectraTypeMap[experiment];
-        if (!data) continue;
+  const info: SpectraTypeMapItem[] = []
+  for (const experiment of spectra) {
+    const data = spectraTypeMap[experiment]
+    if (!data) continue
 
-        info.push(data)
-    }
-    return info;
+    info.push(data)
+  }
+  return info
 }

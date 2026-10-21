@@ -1,0 +1,704 @@
+{
+ "trimethoxybenzaldehyde-correct": {
+  "result": [
+   {
+    "id": 1,
+    "type": "nmr;13C;1d",
+    "statistics": {
+     "accept": 10,
+     "warning": 0,
+     "reject": 0,
+     "missing": 0,
+     "total": 10
+    },
+    "shifts": [
+     {
+      "atom": 1,
+      "prediction": 106.67300033569336,
+      "real": 106.646,
+      "diff": 0.02700033569335858,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(*CC,*CO/H*C,H=O,*&O,C/*&O,,C,HHH),C,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 3,
+      "prediction": 106.67300033569336,
+      "real": 106.646,
+      "diff": 0.02700033569335858,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(*CC,*CO/H*C,H=O,*&O,C/*&O,,C,HHH),C,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 2,
+      "prediction": 131.6884994506836,
+      "real": 131.677,
+      "diff": 0.011499450683601253,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CC(H,H,*C,*C,H=O/*C,*&,O,O,/*&O,C,C),C,HHH,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 4,
+      "prediction": 153.6060028076172,
+      "real": 153.612,
+      "diff": 0.00599719238280727,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CO(*CO,H*C,C/*CO,C,*&C,HHH/H*&,C,HHH,H=O),HHH,//",
+      "spheres": 6
+     },
+     {
+      "atom": 6,
+      "prediction": 153.6060028076172,
+      "real": 153.612,
+      "diff": 0.00599719238280727,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CO(*CO,H*C,C/*CO,C,*&C,HHH/H*&,C,HHH,H=O),HHH,//",
+      "spheres": 6
+     },
+     {
+      "atom": 5,
+      "prediction": 143.5590057373047,
+      "real": 143.518,
+      "diff": 0.04100573730468682,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CO(*C,*C,O,O,C/H,H,*C,*&,C,C,HHH/*&C,HHH,HHH),H=O/,/",
+      "spheres": 6
+     },
+     {
+      "atom": 7,
+      "prediction": 190.99699783325195,
+      "real": 191.088,
+      "diff": 0.09100216674804074,
+      "status": "accept",
+      "hoseCode": "C-3;H=OC(,*C*C/H,H,*C,*C/*C,*&,O,O)*&O,C,C/,C,HHH,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 12,
+      "prediction": 56.22924995422363,
+      "real": 56.258,
+      "diff": 0.02875004577636986,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*CO,H*C)*CO,C,*&C/H*&,C,HHH,H=O/",
+      "spheres": 6
+     },
+     {
+      "atom": 14,
+      "prediction": 56.22924995422363,
+      "real": 56.258,
+      "diff": 0.02875004577636986,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*CO,H*C)*CO,C,*&C/H*&,C,HHH,H=O/",
+      "spheres": 6
+     },
+     {
+      "atom": 13,
+      "prediction": 60.78940391540527,
+      "real": 61.009,
+      "diff": 0.2195960845947269,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*C,*C,O,O)H,H,*C,*&,C,C/*&C,HHH,HHH/",
+      "spheres": 6
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "type": "nmr;1H;1d",
+    "statistics": {
+     "accept": 12,
+     "warning": 0,
+     "reject": 0,
+     "missing": 0,
+     "total": 12
+    },
+    "shifts": [
+     {
+      "atom": 15,
+      "prediction": 7.123149871826172,
+      "real": 7.123,
+      "diff": 0.00014987182617165473,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/*CC,*CO/H*C,H=O,*&O,C)*&O,,C,HHH/,C,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 16,
+      "prediction": 7.123149871826172,
+      "real": 7.123,
+      "diff": 0.00014987182617165473,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/*CC,*CO/H*C,H=O,*&O,C)*&O,,C,HHH/,C,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 17,
+      "prediction": 9.820740222930908,
+      "real": 9.862,
+      "diff": 0.041259777069091896,
+      "status": "accept",
+      "hoseCode": "H-1;C(=OC/,*C*C/H,H,*C,*C)*C,*&,O,O/*&O,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 21,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 22,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 23,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 18,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 19,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 20,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 24,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 25,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 26,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     }
+    ]
+   }
+  ]
+ },
+ "trimethoxybenzaldehyde-c4-wrong": {
+  "result": [
+   {
+    "id": 1,
+    "type": "nmr;13C;1d",
+    "statistics": {
+     "accept": 9,
+     "warning": 0,
+     "reject": 1,
+     "missing": 0,
+     "total": 10
+    },
+    "shifts": [
+     {
+      "atom": 1,
+      "prediction": 106.67300033569336,
+      "real": 106.646,
+      "diff": 0.02700033569335858,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(*CC,*CO/H*C,H=O,*&O,C/*&O,,C,HHH),C,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 3,
+      "prediction": 106.67300033569336,
+      "real": 106.646,
+      "diff": 0.02700033569335858,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(*CC,*CO/H*C,H=O,*&O,C/*&O,,C,HHH),C,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 2,
+      "prediction": 131.6884994506836,
+      "real": 131.677,
+      "diff": 0.011499450683601253,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CC(H,H,*C,*C,H=O/*C,*&,O,O,/*&O,C,C),C,HHH,HHH/,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 4,
+      "prediction": 153.6060028076172,
+      "real": 153.612,
+      "diff": 0.00599719238280727,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CO(*CO,H*C,C/*CO,C,*&C,HHH/H*&,C,HHH,H=O),HHH,//",
+      "spheres": 6
+     },
+     {
+      "atom": 6,
+      "prediction": 153.6060028076172,
+      "real": 153.612,
+      "diff": 0.00599719238280727,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CO(*CO,H*C,C/*CO,C,*&C,HHH/H*&,C,HHH,H=O),HHH,//",
+      "spheres": 6
+     },
+     {
+      "atom": 5,
+      "prediction": 143.5590057373047,
+      "real": 130.0,
+      "diff": 13.559005737304688,
+      "status": "reject",
+      "hoseCode": "C-3-6;*C*CO(*C,*C,O,O,C/H,H,*C,*&,C,C,HHH/*&C,HHH,HHH),H=O/,/",
+      "spheres": 6
+     },
+     {
+      "atom": 7,
+      "prediction": 190.99699783325195,
+      "real": 191.088,
+      "diff": 0.09100216674804074,
+      "status": "accept",
+      "hoseCode": "C-3;H=OC(,*C*C/H,H,*C,*C/*C,*&,O,O)*&O,C,C/,C,HHH,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 12,
+      "prediction": 56.22924995422363,
+      "real": 56.258,
+      "diff": 0.02875004577636986,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*CO,H*C)*CO,C,*&C/H*&,C,HHH,H=O/",
+      "spheres": 6
+     },
+     {
+      "atom": 14,
+      "prediction": 56.22924995422363,
+      "real": 56.258,
+      "diff": 0.02875004577636986,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*CO,H*C)*CO,C,*&C/H*&,C,HHH,H=O/",
+      "spheres": 6
+     },
+     {
+      "atom": 13,
+      "prediction": 60.78940391540527,
+      "real": 61.009,
+      "diff": 0.2195960845947269,
+      "status": "accept",
+      "hoseCode": "C-4;HHHO(C/*C*C/*C,*C,O,O)H,H,*C,*&,C,C/*&C,HHH,HHH/",
+      "spheres": 6
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "type": "nmr;1H;1d",
+    "statistics": {
+     "accept": 12,
+     "warning": 0,
+     "reject": 0,
+     "missing": 0,
+     "total": 12
+    },
+    "shifts": [
+     {
+      "atom": 15,
+      "prediction": 7.123149871826172,
+      "real": 7.123,
+      "diff": 0.00014987182617165473,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/*CC,*CO/H*C,H=O,*&O,C)*&O,,C,HHH/,C,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 16,
+      "prediction": 7.123149871826172,
+      "real": 7.123,
+      "diff": 0.00014987182617165473,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/*CC,*CO/H*C,H=O,*&O,C)*&O,,C,HHH/,C,HHH/",
+      "spheres": 6
+     },
+     {
+      "atom": 17,
+      "prediction": 9.820740222930908,
+      "real": 9.862,
+      "diff": 0.041259777069091896,
+      "status": "accept",
+      "hoseCode": "H-1;C(=OC/,*C*C/H,H,*C,*C)*C,*&,O,O/*&O,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 21,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 22,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 23,
+      "prediction": 3.8549044330914817,
+      "real": 3.926,
+      "diff": 0.07109556690851848,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*C,*C,O,O/H,H,*C,*&,C,C/",
+      "spheres": 6
+     },
+     {
+      "atom": 18,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 19,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 20,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 24,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 25,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     },
+     {
+      "atom": 26,
+      "prediction": 4.03446577390035,
+      "real": 3.933,
+      "diff": 0.10146577390035016,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHO/C/*C*C)*CO,H*C/*CO,C,*&C/",
+      "spheres": 6
+     }
+    ]
+   }
+  ]
+ },
+ "nicotine": {
+  "result": [
+   {
+    "id": 1,
+    "type": "nmr;13C;1d",
+    "statistics": {
+     "accept": 10,
+     "warning": 0,
+     "reject": 0,
+     "missing": 0,
+     "total": 10
+    },
+    "shifts": [
+     {
+      "atom": 12,
+      "prediction": 149.7300033569336,
+      "real": 149.91,
+      "diff": 0.17999664306640284,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*N(*CC,*C/H*C,@NHC,H*&/H*&,CC,HHC),HH&,HHH,HH&//",
+      "spheres": 6
+     },
+     {
+      "atom": 7,
+      "prediction": 138.72000122070312,
+      "real": 138.64,
+      "diff": 0.08000122070313864,
+      "status": "accept",
+      "hoseCode": "C-3-6;*C*CC(H*C,H*N,@NHC/H*C,*&,CC,HHC/H*&,HH&,HHH,HH&)//",
+      "spheres": 6
+     },
+     {
+      "atom": 8,
+      "prediction": 135.52499389648438,
+      "real": 135.15,
+      "diff": 0.3749938964843693,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(*CC,H*C/H*N,@NHC,H*&/*&,CC,HHC),HH&,HHH,HH&//",
+      "spheres": 6
+     },
+     {
+      "atom": 9,
+      "prediction": 123.79999923706055,
+      "real": 123.35,
+      "diff": 0.44999923706055256,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*C(H*C,H*N/*CC,*&/H*&,@NHC),CC,HHC/,HH&,HHH,HH&/",
+      "spheres": 6
+     },
+     {
+      "atom": 10,
+      "prediction": 148.56400190080916,
+      "real": 148.46,
+      "diff": 0.10400190080915195,
+      "status": "accept",
+      "hoseCode": "C-3-6;H*C*N(H*C,*C/H*C,H*&/*&C),@NHC/,CC,HHC/",
+      "spheres": 6
+     },
+     {
+      "atom": 6,
+      "prediction": 68.97000122070312,
+      "real": 68.94,
+      "diff": 0.030001220703127274,
+      "status": "accept",
+      "hoseCode": "C-4-5;@HCNC(*C*C,CC,HHC/H*C,H*N,HH&,HHH,HH&/H*C,*&)H*&//",
+      "spheres": 6
+     },
+     {
+      "atom": 3,
+      "prediction": 57.0,
+      "real": 56.88,
+      "diff": 0.11999999999999744,
+      "status": "accept",
+      "hoseCode": "C-4-5;HHCN(HHC,CC/HH&,@C&H,HHH/@,*C*C),H*C,H*N/,H*C,*&/",
+      "spheres": 6
+     },
+     {
+      "atom": 4,
+      "prediction": 22.299999237060547,
+      "real": 22.53,
+      "diff": 0.23000076293945426,
+      "status": "accept",
+      "hoseCode": "C-4-5;HHCC(HHC,HHN/@H&C,C&/,*C*C,HHH),H*C,H*N/,H*C,*&/",
+      "spheres": 6
+     },
+     {
+      "atom": 5,
+      "prediction": 35.14500045776367,
+      "real": 35.34,
+      "diff": 0.19499954223633154,
+      "status": "accept",
+      "hoseCode": "C-4-5;HHCC(@HNC,HHC/C&,*C*C,HH&/HHH,H*C,H*N),H*C,*&/,H*&/",
+      "spheres": 6
+     },
+     {
+      "atom": 1,
+      "prediction": 40.400001525878906,
+      "real": 40.35,
+      "diff": 0.05000152587890483,
+      "status": "accept",
+      "hoseCode": "C-4;HHHN(CC/@HCC,HHC/*C*C,HH&,HH&)H*C,H*N/H*C,*&/",
+      "spheres": 6
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "type": "nmr;1H;1d",
+    "statistics": {
+     "accept": 13,
+     "warning": 1,
+     "reject": 0,
+     "missing": 0,
+     "total": 14
+    },
+    "shifts": [
+     {
+      "atom": 25,
+      "prediction": 8.84000015258789,
+      "real": 8.55,
+      "diff": 0.2900001525878899,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*N/H*C,*C/H*C,H*&)*&C/,@NHC/",
+      "spheres": 6
+     },
+     {
+      "atom": 23,
+      "prediction": 7.690000057220459,
+      "real": 7.69,
+      "diff": 5.7220458593576495e-08,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/*CC,H*C/H*N,@NHC,H*&)*&,CC,HHC/,HH&,HHH,HH&/",
+      "spheres": 6
+     },
+     {
+      "atom": 24,
+      "prediction": 7.373499870300293,
+      "real": 7.24,
+      "diff": 0.13349987030029276,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*C/H*C,H*N/*CC,*&)H*&,@NHC/,CC,HHC/",
+      "spheres": 6
+     },
+     {
+      "atom": 26,
+      "prediction": 8.550000190734863,
+      "real": 8.5,
+      "diff": 0.05000019073486328,
+      "status": "accept",
+      "hoseCode": "H-1;C(*C*N/*CC,*C/H*C,@NHC,H*&)H*&,CC,HHC/,HH&,HHH,HH&/",
+      "spheres": 6
+     },
+     {
+      "atom": 16,
+      "prediction": 2.774999976158142,
+      "real": 3.08,
+      "diff": 0.305000023841858,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCN/HHC,CC/HH&,@C&H,HHH)@,*C*C/,H*C,H*N/",
+      "spheres": 6
+     },
+     {
+      "atom": 17,
+      "prediction": 2.774999976158142,
+      "real": 3.08,
+      "diff": 0.305000023841858,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCN/HHC,CC/HH&,@C&H,HHH)@,*C*C/,H*C,H*N/",
+      "spheres": 6
+     },
+     {
+      "atom": 13,
+      "prediction": 2.3200000524520874,
+      "real": 2.31,
+      "diff": 0.010000052452087349,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHN/CC/@HCC,HHC)*C*C,HH&,HH&/H*C,H*N/",
+      "spheres": 4
+     },
+     {
+      "atom": 14,
+      "prediction": 2.3200000524520874,
+      "real": 2.31,
+      "diff": 0.010000052452087349,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHN/CC/@HCC,HHC)*C*C,HH&,HH&/H*C,H*N/",
+      "spheres": 4
+     },
+     {
+      "atom": 15,
+      "prediction": 2.3200000524520874,
+      "real": 2.31,
+      "diff": 0.010000052452087349,
+      "status": "accept",
+      "hoseCode": "H-1;C(HHN/CC/@HCC,HHC)*C*C,HH&,HH&/H*C,H*N/",
+      "spheres": 4
+     },
+     {
+      "atom": 22,
+      "prediction": 4.372307667365441,
+      "real": 3.24,
+      "diff": 1.132307667365441,
+      "status": "warning",
+      "hoseCode": "H-1;C(@CNC/*C*C,CC,HHC/H*C,H*N,HH&,HHH,HH&)H*C,*&/H*&/",
+      "spheres": 3
+     },
+     {
+      "atom": 20,
+      "prediction": 1.7687500193715096,
+      "real": 1.73,
+      "diff": 0.03875001937150957,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCC/@HNC,HHC/C&,*C*C,HH&)HHH,H*C,H*N/,H*C,*&/",
+      "spheres": 3
+     },
+     {
+      "atom": 21,
+      "prediction": 1.7687500193715096,
+      "real": 1.73,
+      "diff": 0.03875001937150957,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCC/@HNC,HHC/C&,*C*C,HH&)HHH,H*C,H*N/,H*C,*&/",
+      "spheres": 3
+     },
+     {
+      "atom": 18,
+      "prediction": 2.0962000131607055,
+      "real": 2.17,
+      "diff": 0.07379998683929445,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCC/HHC,HHN/@H&C,C&),*C*C,HHH/,H*C,H*N/",
+      "spheres": 4
+     },
+     {
+      "atom": 19,
+      "prediction": 2.0962000131607055,
+      "real": 2.17,
+      "diff": 0.07379998683929445,
+      "status": "accept",
+      "hoseCode": "H-1;C(HCC/HHC,HHN/@H&C,C&),*C*C,HHH/,H*C,H*N/",
+      "spheres": 4
+     }
+    ]
+   }
+  ]
+ }
+}

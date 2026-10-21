@@ -8,8 +8,8 @@ import {
   loadFileCollection,
   parsingOptions,
   processSpectra,
-} from './parse/prase-spectra'
-import { isSpectrum2D } from './parse/data/data2d/isSpectrum2D'
+} from './parse/prase-spectra.js'
+import { isSpectrum2D } from './parse/data/data2d/isSpectrum2D.js'
 
 // Default tolerances confirmed by vcnainala on issue #66
 const DEFAULT_TOLERANCE_H = 0.02
@@ -104,7 +104,10 @@ export async function generateCorrelationData(input: CorrelationInput) {
 
   let correlationData
   try {
-    correlationData = buildCorrelationData(spectra as Spectra, options)
+    correlationData = buildCorrelationData(
+      spectra as unknown as Spectra,
+      options
+    )
   } catch (error) {
     throw new Error(
       `Failed to build correlation data: ${error instanceof Error ? error.message : String(error)}`

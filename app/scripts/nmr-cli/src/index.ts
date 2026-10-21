@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import yargs, { type Argv, type CommandModule, type Options } from 'yargs'
-import { parseSpectra } from './parse/prase-spectra'
-import { generateSpectrumFromPublicationString } from './publication-string'
-import { generateNMRiumFromPeaks } from './peaks-to-nmrium'
-import type { PeaksToNMRiumInput } from './peaks-to-nmrium'
-import { generateCorrelationData } from './correlation'
+import { parseSpectra } from './parse/prase-spectra.js'
+import { generateSpectrumFromPublicationString } from './publication-string.js'
+import { generateNMRiumFromPeaks } from './peaks-to-nmrium.js'
+import type { PeaksToNMRiumInput } from './peaks-to-nmrium.js'
+import { generateCorrelationData } from './correlation.js'
 import { hideBin } from 'yargs/helpers'
-import { parsePredictionCommand } from './prediction'
-import { readFileSync } from 'fs'
-import { IncludeData } from '@zakodium/nmrium-core'
+import { parsePredictionCommand } from './prediction/index.js'
+import { validateAssignmentsCommand } from './validation/index.js'
+import { readFileSync } from 'node:fs'
 
 const usageMessage = `
 Usage: nmr-cli  <command> [options]
@@ -19,6 +19,7 @@ Commands:
   predict                      Predict spectrum from Mol
   peaks-to-nmrium              Convert a peak list to NMRium object
   correlation                  Build correlation data from NMR spectra fetched from a URL
+  validate-assignments         Check 1H/13C assignments against nmrshiftdb2 quickcheck (JSON on stdin)
 
 Options for 'correlation' command:
   -u, --url                Spectra ZIP file URL
@@ -93,6 +94,20 @@ Arguments for 'peaks-to-nmrium' command:
     }
   }
 
+Arguments for 'validate-assignments' command:
+  Reads JSON from stdin with the following structure:
+  {
+    "structure": { "molfile": "...V2000..." },
+    "conditions": { "solvent": "CDCl3" },
+    "assignments": [
+      { "nucleus": "13C", "atoms": [1, 3], "label": "C-2, C-6", "shift": 106.65 },
+      { "nucleus": "1H", "atoms": [9], "label": "H-9a", "shift": 2.31, "n_h": 1 }
+    ],
+    "unassigned_peaks": [{ "nucleus": "13C", "shift": 77.16, "kind": "solvent" }]
+  }
+  Atom numbers are 1-based molfile indices; for 1H they may point at the carrying heavy atom.
+  Exit codes: 2 invalid input, 3 nmrshiftdb unavailable.
+
 Examples:
   nmr-cli  parse-spectra -u file-url -s                                   // Process spectra files from a URL and capture an image for the spectra
   nmr-cli  parse-spectra -dir directory-path -s                             // process a spectra files from a directory and capture an image for the spectra
@@ -103,59 +118,58 @@ Examples:
 `
 
 export interface FileOptionsArgs {
-  /**  
+  /**
    * -u, --url  
    * File URL to load remote spectra or data.
    */
-  u?: string;
+  u?: string
 
-  /**  
+  /**
    * -dir, --dir-path  
    * Local directory path for file input or output.
    */
-  dir?: string;
+  dir?: string
 
-  /**  
+  /**
    * -s, --capture-snapshot  
    * Capture a visual snapshot of the current state or spectrum.
    */
-  s?: boolean;
+  s?: boolean
 
-  /**  
+  /**
    * -p, --auto-processing  
    * Automatically process spectrum from FID to FT spectra.  
    * Mandatory when automatic detection (`--auto-detection`) is enabled.
    */
-  p?: boolean;
+  p?: boolean
 
-  /**  
+  /**
    * -d, --auto-detection  
    * Perform automatic ranges and zones detection.
    */
-  d?: boolean;
+  d?: boolean
   /**
-   *   -o, --output      
+   *   -o, --output  
    *   Output file path
    */
-  o?: string;
+  o?: string
   /**
-   *  -r, --raw-data   
+   *  -r, --raw-data  
    *   Include raw data in the output, defaults to dataSource
    */
-  r?: boolean;
+  r?: boolean
 
   /**
    * --include
    * Only include files matching these pattern(s) when reading a directory (file-collection's filter.include).
    */
-  include?: string[];
+  include?: string[]
 
   /**
    * --exclude
    * Exclude files matching these pattern(s) when reading a directory (file-collection's filter.exclude).
    */
-  exclude?: string[];
-
+  exclude?: string[]
 }
 
 // Define options for parsing a spectra file
@@ -201,12 +215,14 @@ const fileOptions: { [key in keyof FileOptionsArgs]: Options } = {
   include: {
     type: 'array',
     string: true,
-    description: 'Only include files matching pattern(s) when reading a directory (glob/regex string)',
+    description:
+      'Only include files matching pattern(s) when reading a directory (glob/regex string)',
   },
   exclude: {
     type: 'array',
     string: true,
-    description: 'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
+    description:
+      'Exclude files matching pattern(s) when reading a directory (glob/regex string)',
   },
 } as const
 
@@ -252,7 +268,7 @@ const peaksToNMRiumCommand: CommandModule = {
     } catch (error) {
       console.error(
         'Error:',
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.message : String(error)
       )
       process.exit(1)
     }
@@ -262,7 +278,8 @@ const peaksToNMRiumCommand: CommandModule = {
 // Define the correlation command
 const correlationCommand: CommandModule = {
   command: ['correlation', 'corr'],
-  describe: 'Build correlation data from NMR spectra fetched from a URL or a local directory',
+  describe:
+    'Build correlation data from NMR spectra fetched from a URL or a local directory',
   builder: yargs => {
     return yargs
       .options({
@@ -312,7 +329,7 @@ const correlationCommand: CommandModule = {
     } catch (error) {
       console.error(
         'Error:',
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.message : String(error)
       )
       process.exit(1)
     }
@@ -326,6 +343,7 @@ yargs(hideBin(process.argv))
   .command(parsePredictionCommand)
   .command(peaksToNMRiumCommand)
   .command(correlationCommand)
+  .command(validateAssignmentsCommand)
   .showHelpOnFail(true)
   .help()
   .parse()

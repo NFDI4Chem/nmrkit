@@ -1,7 +1,7 @@
 import { peaksToXY } from 'nmr-processing'
 import { CURRENT_EXPORT_VERSION } from '@zakodium/nmrium-core'
 import type { NMRPeak1D } from '@zakodium/nmr-types'
-import { castToArray } from './utilities/castToArray'
+import { castToArray } from './utilities/castToArray.js'
 
 interface PeakInput {
   x: number
@@ -39,7 +39,7 @@ function generateNMRiumFromPeaks(input: PeaksToNMRiumInput) {
   }
 
   const defaultWidth = 1
-  const nmrPeaks: NMRPeak1D[] = peaks.map((peak) => ({
+  const nmrPeaks: NMRPeak1D[] = peaks.map(peak => ({
     x: peak.x,
     y: peak.y ?? 1,
     width: peak.width ?? defaultWidth,
