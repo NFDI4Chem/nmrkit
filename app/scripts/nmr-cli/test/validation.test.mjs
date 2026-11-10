@@ -187,6 +187,18 @@ test('nicotine: diastereotopic pairs are scored by their mean and low-sphere ato
   assert.equal(report.assignment_check.result, 'review')
 })
 
+test('diastereotopic pair rows keep the author\'s own labels (Mnova ax/eq, primes)', async () => {
+  const input = nicotine()
+  const renamed = { "H-5'a": "H-5'ax", "H-5'b": "H-5'eq" }
+  input.assignments = input.assignments.map((row) => (renamed[row.label] ? { ...row, label: renamed[row.label] } : row))
+
+  const { report } = await run(input, 'nicotine')
+
+  const pairRows = report.reports['1H'].atoms.filter((row) => row.atoms[0] === 3)
+  assert.deepEqual(pairRows.map((row) => row.label), ["H-5'ax", "H-5'eq"])
+  assert.deepEqual(pairRows.map((row) => row.pair), ["H-5'eq", "H-5'ax"])
+})
+
 test('the quality report follows the author\'s assignments, not the servlet\'s own matching', async () => {
   const response = structuredClone(responses['trimethoxybenzaldehyde-correct'])
   const proton = response.result.find((result) => result.id === 2)
