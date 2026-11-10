@@ -351,10 +351,12 @@ function buildNucleusReport(
     const prediction = entry.prediction
 
     if (nucleus === '1H' && observed.length === 2 && (topology.hydrogenCounts.get(atom) ?? 0) >= 2) {
-      const stem = label.replace(/[ab]$/, '')
+      const [low, high] = observed.map((value) =>
+        rowLabelForAtom(covering.find((row) => round(row.input.shift, 4) === value)!, atom),
+      )
       const deviation = round(Math.abs(mean(observed) - prediction), 3)
-      atomRows.push({ ...base, label: `${stem}a`, observed: observed[0], deviation, status, pair: `${stem}b` })
-      atomRows.push({ ...base, label: `${stem}b`, observed: observed[1], deviation, status, pair: `${stem}a` })
+      atomRows.push({ ...base, label: low, observed: observed[0], deviation, status, pair: high })
+      atomRows.push({ ...base, label: high, observed: observed[1], deviation, status, pair: low })
       continue
     }
 
@@ -419,9 +421,13 @@ function atomName(atom: number, nucleus: Nucleus, rows: NormalizedRow[]): string
 function labelForAtom(atom: number, nucleus: Nucleus, rows: NormalizedRow[]): string {
   const row = rows.find((item) => item.input.nucleus === nucleus && item.carriers.includes(atom))
   if (!row) return String(atom)
-  if (row.carriers.length === 1) {
-    return row.input.diastereotopic ? row.label.replace(/[ab]$/, '') : row.label
-  }
+  if (row.carriers.length === 1 && row.input.diastereotopic) return row.label.replace(/[ab]$/, '')
+  return rowLabelForAtom(row, atom)
+}
+
+/** The author's name for one atom of a row, as written ("H-5'", "H-2ax"). */
+function rowLabelForAtom(row: NormalizedRow, atom: number): string {
+  if (row.carriers.length === 1) return row.label
 
   const parts = row.label.split(/\s*(?:,|;|\band\b)\s*/).filter(Boolean)
   const position = row.atomCarriers.indexOf(atom)
